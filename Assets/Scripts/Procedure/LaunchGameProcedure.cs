@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using GameFramework.Fsm;
@@ -5,6 +6,7 @@ using GameFramework.Procedure;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityGameFramework.Runtime;
+using yxy;
 
 public class LaunchGameProcedure : ProcedureBase
 {
@@ -18,7 +20,13 @@ public class LaunchGameProcedure : ProcedureBase
     {
         base.OnEnter(procedureOwner);
         Log.Info("Procedure Enter ----- LaunchGame");
-        GameEntry.GetComponent<UIComponent>().AddUIGroup("Default");
-        GameEntry.GetComponent<UIComponent>().OpenUIForm("Assets/Prefabs/UI/LaunchGameView.prefab","Default");
+
+        foreach (var enumName in EnumHelper.GetEnumNames<GameConstants.UIGroups>())
+        {
+            GameEntry.GetComponent<UIComponent>().AddUIGroup(enumName);
+        }
+        
+        GameEntry.GetComponent<UIComponent>().OpenUIForm("Assets/Prefabs/UI/LaunchGameView.prefab","Dialog");
+        
     }
 }
