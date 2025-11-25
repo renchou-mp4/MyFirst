@@ -10,10 +10,13 @@ using yxy;
 
 public class LaunchGameProcedure : ProcedureBase
 {
+    private IFsm<IProcedureManager> _procedureOwner;
+    
     protected override void OnInit(IFsm<IProcedureManager> procedureOwner)
     {
         base.OnInit(procedureOwner);
         Log.Info("Procedure Init ----- LaunchGame");
+        _procedureOwner = procedureOwner;
     }
 
     protected override void OnEnter(IFsm<IProcedureManager> procedureOwner)
@@ -27,6 +30,10 @@ public class LaunchGameProcedure : ProcedureBase
         }
         
         GameEntry.GetComponent<UIComponent>().OpenUIForm("Assets/Prefabs/UI/LaunchGameView.prefab","Dialog");
-        
+    }
+
+    public void LaunchGameChangeState<T>() where T : ProcedureBase
+    {
+        ChangeState<T>(_procedureOwner);
     }
 }
