@@ -29,8 +29,8 @@ public class UIGroupHelper : UIGroupHelperBase
         var rectTransform = GetComponent<RectTransform>();
         rectTransform.anchorMin = Vector2.zero;
         rectTransform.anchorMax = Vector2.one;
-        rectTransform.anchoredPosition = Vector2.zero;
         rectTransform.sizeDelta = Vector2.zero;
+        rectTransform.anchoredPosition = Vector2.zero;
     }
     
 }

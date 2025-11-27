@@ -609,7 +609,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8388250660604020871}
-  - component: {fileID: 8068341831154632005}
+  - component: {fileID: 1152440480838828405}
   m_Layer: 0
   m_Name: HUDView
   m_TagString: Untagged
@@ -641,7 +641,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &8068341831154632005
+--- !u!114 &1152440480838828405
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -650,6 +650,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 6104887578946440098}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a6be4cb575fd943e99cf7687176c8be4, type: 3}
+  m_Script: {fileID: 11500000, guid: d156e5a43461141feb566a76f3927b5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
