@@ -8,12 +8,12 @@ using UnityGameFramework.Runtime;
 public class LaunchGameView : UIFormLogic
 {
     public Button _StartButton;
-    public Action _ClickAction;
+    private Action _clickAction;
 
     protected override void OnInit(object userData)
     {
         base.OnInit(userData);
-        _ClickAction = userData as Action;
+        _clickAction = userData as Action;
         _StartButton.onClick.AddListener(OnClickStart);
     }
 
@@ -25,8 +25,8 @@ public class LaunchGameView : UIFormLogic
 
     private void OnClickStart()
     {
-        _ClickAction?.Invoke();
-        GameEntry.GetComponent<SceneComponent>().LoadScene("Assets/Scenes/MainGame.unity");
-        GameEntry.GetComponent<UIComponent>().CloseUIForm(this.UIForm);
+        _clickAction?.Invoke();
+        GameEntry.Scene.LoadScene("Assets/Scenes/MainGame.unity");
+        GameEntry.UI.CloseUIForm(this.UIForm);
     }
 }
