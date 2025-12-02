@@ -1,8 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using DG.DemiEditor;
 using UnityEditor;
 using UnityEngine;
+using UnityGameFramework.Runtime;
+using Object = System.Object;
 
 public class TextureCropTool : EditorWindow
 {
@@ -15,7 +19,7 @@ public class TextureCropTool : EditorWindow
     private const float _baseRect = 128;
     private float _alphaThreshold = 0.01f;
     private int _padding = 0;
-    private string _outputPath = "";
+    private string _assetPath = "";
     private Color _boundsColor = Color.green;
     private Rect _newRect;
     private Rect _oldRect;
@@ -45,7 +49,7 @@ public class TextureCropTool : EditorWindow
         
         
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("输出目录", _outputPath);
+        EditorGUILayout.LabelField("资源路径", _assetPath);
     }
 
     private void DrawLayout()
@@ -53,7 +57,7 @@ public class TextureCropTool : EditorWindow
         _oldTexture = _newTexture = EditorGUILayout.ObjectField("选择图片：", _oldTexture, typeof(Texture2D), false) as Texture2D;
         if (_lastTexture == null || _lastTexture != _oldTexture)
         {
-            _outputPath = AssetDatabase.GetAssetPath(_oldTexture);
+            _assetPath = AssetDatabase.GetAssetPath(_oldTexture);
             _lastTexture = _oldTexture;
             _newBounds = Rect.zero;
         }
@@ -116,6 +120,11 @@ public class TextureCropTool : EditorWindow
             Handles.DrawWireCube(_oldRect.center,new Vector2(_oldRect.width,_oldRect.height));
             Handles.DrawWireCube(_newRect.center,new  Vector2(_newBounds.width * _oldRect.width / _oldTexture.width,_newBounds.height * _oldRect.height / _oldTexture.height));
         }
+        
+        if(GUILayout.Button("裁剪", GUILayout.Height(60)))
+        {
+            CropTexture();
+        }
         Handles.EndGUI();
         
         GUILayout.EndVertical();
@@ -125,17 +134,14 @@ public class TextureCropTool : EditorWindow
     {
         if (_newTexture == null) return Rect.zero;
         
-        _importer = AssetImporter.GetAtPath(_outputPath) as TextureImporter;
+        _importer = AssetImporter.GetAtPath(_assetPath) as TextureImporter;
 
-        if (_importer is { isReadable: false })
-        {
-            _importer.isReadable = true;
-            _importer.SaveAndReimport();
-        }
+        Texture2D readableTex = GetReadableTexture();
+        if(readableTex == null) return Rect.zero;
 
-        Color32[] pixels = _newTexture.GetPixels32();
-        int width = _newTexture.width;
-        int height = _newTexture.height;
+        Color32[] pixels = readableTex.GetPixels32();
+        int width = readableTex.width;
+        int height = readableTex.height;
 
         int minX = width;
         int minY = height;
@@ -156,12 +162,6 @@ public class TextureCropTool : EditorWindow
                     if (y > maxY) maxY = y;
                 }
             }
-        }
-
-        if (_importer is {isReadable: true})
-        {
-            _importer.isReadable = false;
-            _importer.SaveAndReimport();
         }
         
         //没有非透明像素，返回整个纹理
@@ -184,7 +184,7 @@ public class TextureCropTool : EditorWindow
     {
         if (_newBounds.width <= 0 || _newBounds.height <= 0)
         {
-            Debug.Log($"裁剪失败！裁剪包围盒非法：{_newBounds.width} x {_newBounds.height}");
+            Log.Error($"裁剪失败！裁剪包围盒非法：{_newBounds.width} x {_newBounds.height}");
             return;
         }
         
@@ -205,11 +205,72 @@ public class TextureCropTool : EditorWindow
         croppedTexture.SetPixels(pixels);
 
         //复制有效区域
+        Texture2D readableTex = GetReadableTexture();
+        Color[] readablePixels = readableTex.GetPixels(
+            (int)_newBounds.x,
+            (int)_newBounds.y,
+            (int)_newBounds.width,
+            (int)_newBounds.height);
+        
+        croppedTexture.SetPixels(_padding,_padding,(int)_newBounds.width,(int)_newBounds.height,readablePixels);
+        croppedTexture.Apply();
+        
+        //保存纹理
+        string outputPath = _assetPath.GetDirectoryPath();
+        string fileName = Path.GetFileNameWithoutExtension(_assetPath);
+        string extension = Path.GetExtension(_assetPath);
+        
+        //确保输出目录存在
+        if (!Directory.Exists(outputPath) && !outputPath.IsNullOrEmpty())
+        {
+            Directory.CreateDirectory(outputPath);
+        }
+        
+        string path = $"{outputPath}/{fileName}_cropped{extension}";
+        byte[] pngData = croppedTexture.EncodeToPNG();
+        File.WriteAllBytes(path, pngData);
+        
+        //清理临时纹理
+        DestroyImmediate(croppedTexture);
+        if(readableTex != null)
+            DestroyImmediate(readableTex);
+        
+        //导入设置
+        AssetDatabase.Refresh();
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer != null)
+        {
+            importer.textureType = TextureImporterType.Sprite;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
 
-        
-        
+        Log.Info($"裁剪完成！保存路径：{path}");
     }
-    
-    private void Get
+
+    private Texture2D GetReadableTexture()
+    {
+        //通过复制获得可读纹理
+        RenderTexture readerTex = RenderTexture.GetTemporary(
+            _newTexture.width,
+            _newTexture.height, 
+            0,
+            RenderTextureFormat.Default,
+            RenderTextureReadWrite.Linear);
+        
+        Graphics.Blit(_newTexture, readerTex);
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = readerTex;
+        
+        Texture2D readableTex= new Texture2D(_newTexture.width, _newTexture.height);
+        readableTex.ReadPixels(new Rect(0, 0, readerTex.width, readerTex.height), 0, 0);
+        readableTex.Apply();
+        
+        RenderTexture.active = previous;
+        RenderTexture.ReleaseTemporary(readerTex);
+
+        return readableTex;
+    }
     
 }
