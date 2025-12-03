@@ -10,8 +10,8 @@ public static class GameConstants
     public enum UIGroups
     {
         Background = 0,
-        Dialog,
         HUD,
+        Dialog,
         Popup,
         Tip,
         Guide,

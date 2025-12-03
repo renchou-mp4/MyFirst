@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityGameFramework.Runtime;
+using UnityEngine.UI;
 
-public class HUDView : UIFormLogic
+public class ButtonCustom : Button
 {
     
 }
