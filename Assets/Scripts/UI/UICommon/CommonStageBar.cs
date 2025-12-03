@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IStageReward
+public class CommonStageBar : MonoBehaviour
 {
     
 }
