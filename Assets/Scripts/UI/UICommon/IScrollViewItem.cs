@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface IScrollViewItem
 {
-    
+     public int _ItemId { get; set; }
 }

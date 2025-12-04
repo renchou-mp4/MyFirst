@@ -8,9 +8,9 @@ using UnityEngine;
 [Serializable]
 public class CommonStageReward : MonoBehaviour,IStageReward
 {
-    public ImageCustom _Img_Icon;
-    public ImageCustom _Img_NodeBg;
-    public ImageCustom _Img_Node;
-    public TextMeshProUGUI _Txt_Count;
-    
+    public int _ItemId { get; set; }
+    public ImageCustom _Img_Icon { get; set; }
+    public ImageCustom _Img_NodeBg { get; set; }
+    public ImageCustom _Img_Node { get; set; }
+    public TextMeshProUGUI _Txt_Count { get; set; }
 }
