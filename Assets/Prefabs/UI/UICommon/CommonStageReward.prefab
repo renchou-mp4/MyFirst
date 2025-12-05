@@ -416,8 +416,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 0}
-  m_Horizontal: 1
-  m_Vertical: 1
+  m_Horizontal: 0
+  m_Vertical: 0
   m_MovementType: 1
   m_Elasticity: 0.1
   m_Inertia: 1
@@ -455,12 +455,12 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _ItemPrefabs:
-  - {fileID: 169710250607623702}
+  - {fileID: 169710250607623702, guid: 32fe739aeab58421c9bf7c974cf7733a, type: 3}
   _ItemSizeTopThree:
   - {x: 0, y: 0}
   - {x: 0, y: 0}
   - {x: 0, y: 0}
-  _Direction: 2
+  _Horizontal: 1
 --- !u!1 &5390374279944783458
 GameObject:
   m_ObjectHideFlags: 0
