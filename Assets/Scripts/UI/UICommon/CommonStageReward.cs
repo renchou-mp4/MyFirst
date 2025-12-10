@@ -9,6 +9,11 @@ using UnityEngine;
 public class CommonStageReward : MonoBehaviour,IStageReward
 {
     public int _ItemId { get; set; }
+    public void Create()
+    {
+        throw new NotImplementedException();
+    }
+
     public ImageCustom _Img_Icon { get; set; }
     public ImageCustom _Img_NodeBg { get; set; }
     public ImageCustom _Img_Node { get; set; }
