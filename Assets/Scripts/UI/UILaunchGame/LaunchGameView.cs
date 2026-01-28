@@ -1,32 +1,32 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
 using UnityGameFramework.Runtime;
 
-public class LaunchGameView : UIFormLogic
+namespace yxy
 {
-    public Button _StartButton;
-    private Action _clickAction;
-
-    protected override void OnInit(object userData)
+    public class LaunchGameView : UIFormLogic
     {
-        base.OnInit(userData);
-        _clickAction = userData as Action;
-        _StartButton.onClick.AddListener(OnClickStart);
-    }
+        public Button _StartButton;
+        private Action _clickAction;
 
-    protected override void OnOpen(object userData)
-    {
-        base.OnOpen(userData);
-        Log.Info("OpenView-------LaunchGameView");
-    }
+        protected override void OnInit(object userData)
+        {
+            base.OnInit(userData);
+            _clickAction = userData as Action;
+            _StartButton.onClick.AddListener(OnClickStart);
+        }
 
-    private void OnClickStart()
-    {
-        _clickAction?.Invoke();
-        GameEntry.Scene.LoadScene("Assets/Scenes/MainGame.unity");
-        GameEntry.UI.CloseUIForm(this.UIForm);
+        protected override void OnOpen(object userData)
+        {
+            base.OnOpen(userData);
+            Log.Info("OpenView-------LaunchGameView");
+        }
+
+        private void OnClickStart()
+        {
+            _clickAction?.Invoke();
+            GameEntry.Scene.LoadScene("Assets/Scenes/MainGame.unity");
+            GameEntry.UI.CloseUIForm(this.UIForm);
+        }
     }
 }

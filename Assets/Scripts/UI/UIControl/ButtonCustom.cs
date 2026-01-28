@@ -1,9 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
 
-public class ButtonCustom : Button
+namespace yxy
 {
-    
+    public class ButtonCustom : Button
+    {
+
+    }
 }

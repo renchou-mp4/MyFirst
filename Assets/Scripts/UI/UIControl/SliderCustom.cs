@@ -1,11 +1,12 @@
 using UnityEngine.UI;
 
-
-
-public class SliderCustom : Slider
+namespace yxy
 {
-    protected override void Reset()
+    public class SliderCustom : Slider
     {
-        base.Reset();
+        protected override void Reset()
+        {
+            base.Reset();
+        }
     }
 }

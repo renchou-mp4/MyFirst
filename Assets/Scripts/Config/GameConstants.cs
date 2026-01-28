@@ -1,19 +1,23 @@
-
-public static class GameConstants
+namespace yxy
 {
-    public enum GameScenes
+    public static class GameConstants
     {
-        LaunchGame = 0,
-        MainGame = 1,
-    }
+        public enum GameScenes
+        {
+            LaunchGame = 0,
+            MainGame = 1,
+        }
 
-    public enum UIGroups
-    {
-        Background = 0,
-        HUD,
-        Dialog,
-        Popup,
-        Tip,
-        Guide,
+        public enum UIGroups
+        {
+            Background = 0,
+            HUD,
+            Dialog,
+            Popup,
+            Tip,
+            Guide,
+        }
     }
 }
+
+

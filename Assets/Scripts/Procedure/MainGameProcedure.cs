@@ -1,15 +1,14 @@
-using System.Collections;
-using System.Collections.Generic;
 using GameFramework.Fsm;
 using GameFramework.Procedure;
-using UnityEngine;
-using UnityGameFramework.Runtime;
 
-public class MainGameProcedure : ProcedureBase
+namespace yxy
 {
-    protected override void OnEnter(IFsm<IProcedureManager> procedureOwner)
+    public class MainGameProcedure : ProcedureBase
     {
-        base.OnEnter(procedureOwner);
-        GameEntry.UI.OpenUIForm("Assets/Prefabs/UI/HUDView.prefab","HUD");
+        protected override void OnEnter(IFsm<IProcedureManager> procedureOwner)
+        {
+            base.OnEnter(procedureOwner);
+            GameEntry.UI.OpenUIForm("Assets/Prefabs/UI/HUDView.prefab", "HUD");
+        }
     }
 }

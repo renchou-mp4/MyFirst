@@ -1,45 +1,42 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using GameFramework.Fsm;
 using GameFramework.Procedure;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityGameFramework.Runtime;
-using yxy;
 
-public class LaunchGameProcedure : ProcedureBase
+namespace yxy
 {
-    private bool isInit = false;
-    
-    protected override void OnInit(IFsm<IProcedureManager> procedureOwner)
+    public class LaunchGameProcedure : ProcedureBase
     {
-        base.OnInit(procedureOwner);
-        Log.Info("Procedure Init ----- LaunchGame");
-    }
+        private bool isInit = false;
 
-    protected override void OnEnter(IFsm<IProcedureManager> procedureOwner)
-    {
-        base.OnEnter(procedureOwner);
-        Log.Info("Procedure Enter ----- LaunchGame");
-
-        foreach (var enumName in EnumHelper.GetEnumNames<GameConstants.UIGroups>())
+        protected override void OnInit(IFsm<IProcedureManager> procedureOwner)
         {
-            GameEntry.UI.AddUIGroup(enumName);
+            base.OnInit(procedureOwner);
+            Log.Info("Procedure Init ----- LaunchGame");
         }
 
-        isInit = true;
-    }
-
-    protected override void OnUpdate(IFsm<IProcedureManager> procedureOwner, float elapseSeconds, float realElapseSeconds)
-    {
-        base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
-        Log.Info("Procedure Update ----- LaunchGame");
-
-        if (isInit)
+        protected override void OnEnter(IFsm<IProcedureManager> procedureOwner)
         {
-            ChangeState<PreloadProcedure>(procedureOwner);
+            base.OnEnter(procedureOwner);
+            Log.Info("Procedure Enter ----- LaunchGame");
+
+            foreach (var enumName in EnumHelper.GetEnumNames<GameConstants.UIGroups>())
+            {
+                GameEntry.UI.AddUIGroup(enumName);
+            }
+
+            isInit = true;
+        }
+
+        protected override void OnUpdate(IFsm<IProcedureManager> procedureOwner, float elapseSeconds, float realElapseSeconds)
+        {
+            base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
+            Log.Info("Procedure Update ----- LaunchGame");
+
+            if (isInit)
+            {
+                ChangeState<PreloadProcedure>(procedureOwner);
+            }
         }
     }
 }
+
