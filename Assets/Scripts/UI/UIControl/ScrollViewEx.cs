@@ -7,7 +7,7 @@ using UnityGameFramework.Runtime;
 
 namespace yxy
 {
-    public enum ScrollDir
+    public enum EScrollDir
     {
         Horizontal,
         Vertical
@@ -23,7 +23,7 @@ namespace yxy
 
         // 配置变量
         [Header("滚动配置")]
-        [SerializeField] private ScrollDir _ScrollDirection = ScrollDir.Vertical;
+        [SerializeField] private EScrollDir _ScrollDirection = EScrollDir.Vertical;
         [SerializeField] private float _Spacing = 0f;
         [SerializeField] private int _PreloadCount = 5;
 
@@ -65,8 +65,8 @@ namespace yxy
             }
 
             // 设置滚动方向
-            Sr_ScrollRect.horizontal = _ScrollDirection == ScrollDir.Horizontal;
-            Sr_ScrollRect.vertical = _ScrollDirection == ScrollDir.Vertical;
+            Sr_ScrollRect.horizontal = _ScrollDirection == EScrollDir.Horizontal;
+            Sr_ScrollRect.vertical = _ScrollDirection == EScrollDir.Vertical;
 
             // 注册滚动事件
             Sr_ScrollRect.onValueChanged.AddListener(OnScrollValueChanged);
@@ -80,12 +80,12 @@ namespace yxy
                 if (Go_ItemPrefab.TryGetComponent<IScrollViewItem>(out var item))
                 {
                     Vector2 size = item.GetItemSize();
-                    _ItemSize = _ScrollDirection == ScrollDir.Horizontal ? size.x : size.y;
+                    _ItemSize = _ScrollDirection == EScrollDir.Horizontal ? size.x : size.y;
                 }
             }
 
             // 计算视口大小
-            _ViewPortSize = _ScrollDirection == ScrollDir.Horizontal ?
+            _ViewPortSize = _ScrollDirection == EScrollDir.Horizontal ?
                 Sr_ScrollRect.viewport.rect.width : Sr_ScrollRect.viewport.rect.height;
         }
 
@@ -120,7 +120,7 @@ namespace yxy
             _DataList.AddRange(dataList);
 
             // 重置滚动位置
-            Sr_ScrollRect.normalizedPosition = _ScrollDirection == ScrollDir.Horizontal ? Vector2.right : Vector2.up;
+            Sr_ScrollRect.normalizedPosition = _ScrollDirection == EScrollDir.Horizontal ? Vector2.right : Vector2.up;
 
             // 回收所有活跃的Item
             RecycleAllItems();
@@ -150,7 +150,7 @@ namespace yxy
             _ContentSize = count * _ItemSize + (count - 1) * _Spacing;
 
             Vector2 size = Tf_Content.sizeDelta;
-            if (_ScrollDirection == ScrollDir.Horizontal)
+            if (_ScrollDirection == EScrollDir.Horizontal)
             {
                 size.x = _ContentSize;
             }
@@ -172,6 +172,7 @@ namespace yxy
                 return;
             }
 
+            // 可视项目数 + ViewPort外上下两个方向的预加载项目数
             _MaxVisibleCount = Mathf.CeilToInt(_ViewPortSize / _ItemSize) + _PreloadCount * 2;
             _MaxVisibleCount = Mathf.Min(_MaxVisibleCount, _DataList.Count);
         }
@@ -185,7 +186,7 @@ namespace yxy
                 return;
 
             // 计算当前可见区域的起始和结束位置
-            float scrollPosition = _ScrollDirection == ScrollDir.Horizontal ?
+            float scrollPosition = _ScrollDirection == EScrollDir.Horizontal ?
                 Tf_Content.anchoredPosition.x : -Tf_Content.anchoredPosition.y;
 
             int newFirstVisibleIndex = Mathf.Max(0, Mathf.FloorToInt(scrollPosition / (_ItemSize + _Spacing)) - _PreloadCount);
@@ -285,7 +286,7 @@ namespace yxy
             // 设置Item的位置
             float position = index * (_ItemSize + _Spacing);
             Vector2 anchoredPos = itemTrans.anchoredPosition;
-            if (_ScrollDirection == ScrollDir.Horizontal)
+            if (_ScrollDirection == EScrollDir.Horizontal)
             {
                 anchoredPos.x = position;
                 anchoredPos.y = 0;
@@ -466,7 +467,7 @@ namespace yxy
         /// <summary>
         /// 获取或设置滚动方向
         /// </summary>
-        public ScrollDir _ScrollDir
+        public EScrollDir _ScrollDir
         {
             get { return _ScrollDirection; }
             set { _ScrollDirection = value; }
