@@ -11,7 +11,7 @@ namespace yxy
         {
             base.OnEnter(procedureOwner);
             Log.Info("Procedure Enter ----- Preload");
-            GameEntry.UI.OpenUIForm("Assets/Prefabs/UI/LaunchGameView.prefab", "Dialog", new Action(() =>
+            GameEntry.UI.OpenUIForm("Assets/Prefabs/UI/UILaunchGame/LaunchGameView.prefab", "Dialog", new Action(() =>
             {
                 ChangeState<MainGameProcedure>(procedureOwner);
             }));

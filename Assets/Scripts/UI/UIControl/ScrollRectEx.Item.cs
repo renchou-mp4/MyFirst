@@ -7,7 +7,7 @@ namespace yxy
 
 
     // 使用partial类将相关类分离到不同文件
-    public partial class ScrollViewEx
+    public partial class ScrollRectEx
     {
         /// <summary>
         /// ScrollView Item对象池包装类

@@ -5,7 +5,7 @@ namespace yxy
     /// <summary>
     /// ScrollViewItem接口，所有ScrollView的子物体都需要继承此接口
     /// </summary>
-    public interface IScrollViewItem
+    public interface IScrollRectItem
     {
         /// <summary>
         /// 设置Item数据

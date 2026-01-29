@@ -1,0 +1,119 @@
+{
+    "environment": {
+        "unity": {
+            "version": "2022.3.62f2",
+            "supportedVersions": [
+                "2022.3.62f2"
+            ],
+            "apiCompatibilityLevel": ".NET Standard 2.1",
+            "scriptingBackend": "IL2CPP",
+            "crossPlatformTargets": [
+                "StandaloneOSX",
+                "StandaloneWindows64",
+                "Android",
+                "iOS"
+            ]
+        },
+        "csharp": {
+            "version": "10.0.102",
+            "languageStandard": "C# 10",
+            "dotNetCoreVersion": "10.0.102",
+            "runtimeSupport": [
+                "net6.0",
+                "net7.0",
+                "net8.0"
+            ]
+        },
+        "vscode": {
+            "extensions": [
+                "edwinsulaiman.jetbrains-rider-dark-theme",
+                "gruntfuggly.todo-tree",
+                "jeremycaron.csharp-organize-usings",
+                "marscode.marscode-extension",
+                "ms-ceintl.vscode-language-pack-zh-hans",
+                "ms-dotnettools.csdevkit",
+                "ms-dotnettools.csharp",
+                "ms-dotnettools.vscode-dotnet-runtime",
+                "pkief.material-icon-theme",
+                "usernamehw.errorlens",
+                "visualstudiotoolsforunity.vstuc"
+            ],
+            "settings": {
+                "omnisharp.useModernNet": true,
+                "csharp.format.enable": true,
+                "omnisharp.defaultLaunchSolution": "",
+                "omnisharp.monoPath": "",
+                "editor.formatOnSave": true,
+                "files.trimTrailingWhitespace": true,
+                "files.insertFinalNewline": true,
+                "csharp.suppressDotnetRestoreNotification": false
+            }
+        },
+        "system": {
+            "macOS": {
+                "operatingSystem": "macOS",
+                "architecture": "x64/arm64",
+                "developmentEnvironment": "MacOS",
+                "paths": {
+                    "unityInstallationPath": "/Applications/Unity/Hub/Editor/2022.3.62f2/Unity.app/Contents/MacOS/Unity",
+                    "unityHubPath": "/Applications/Unity Hub.app/Contents/MacOS/Unity Hub"
+                },
+                "npmPackages": [
+                    "@google/generative-ai",
+                    "gemini-cli",
+                    "oh-my-posh"
+                ],
+                "requiredTools": [
+                    "Homebrew",
+                    "Mono",
+                    "Git",
+                    "Node.js",
+                    "npm"
+                ],
+                "additionalDependencies": [
+                    "Xcode Command Line Tools"
+                ]
+            },
+            "windows": {
+                "operatingSystem": "Windows",
+                "architecture": "x64",
+                "developmentEnvironment": "Windows",
+                "paths": {
+                    "unityInstallationPath": "C:\\Program Files\\Unity\\Hub\\Editor\\{VERSION}\\Editor\\Unity.exe",
+                    "unityHubPath": "C:\\Program Files\\Unity Hub\\Unity Hub.exe"
+                },
+                "npmPackages": [
+                    "@google/generative-ai",
+                    "gemini-cli",
+                    "oh-my-posh"
+                ],
+                "requiredTools": [
+                    "Visual Studio Build Tools",
+                    "Git for Windows",
+                    "Node.js",
+                    "npm",
+                    "NuGet"
+                ],
+                "additionalDependencies": [
+                    "MSVC v143 compiler",
+                    "Windows SDK"
+                ]
+            },
+            "commonPaths": {
+                "projectRoot": "./",
+                "assetsPath": "./Assets",
+                "packagesPath": "./Packages",
+                "projectSettingsPath": "./ProjectSettings",
+                "libraryPath": "./Library",
+                "tempPath": "./Temp",
+                "nodeModulesPath": "./node_modules"
+            },
+            "commonRequirements": {
+                "nodeJsVersion": ">=16.0.0",
+                "npmVersion": ">=8.0.0",
+                "gitVersion": ">=2.30.0",
+                "diskSpaceRequiredGB": 20
+            }
+        }
+    }
+}

@@ -8,7 +8,7 @@ namespace yxy
         protected override void OnEnter(IFsm<IProcedureManager> procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            GameEntry.UI.OpenUIForm("Assets/Prefabs/UI/HUDView.prefab", "HUD");
+            GameEntry.UI.OpenUIForm("Assets/Prefabs/UI/UIHUD/HUDView.prefab", "HUD");
         }
     }
 }

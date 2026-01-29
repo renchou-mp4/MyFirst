@@ -14,7 +14,7 @@ namespace yxy
     }
 
     [RequireComponent(typeof(ScrollRect))]
-    public partial class ScrollViewEx : SerializedMonoBehaviour
+    public partial class ScrollRectEx : SerializedMonoBehaviour
     {
         // Unity特有类型变量
         [SerializeField] private GameObject Go_ItemPrefab;
@@ -26,6 +26,13 @@ namespace yxy
         [SerializeField] private EScrollDir _ScrollDirection = EScrollDir.Vertical;
         [SerializeField] private float _Spacing = 0f;
         [SerializeField] private int _PreloadCount = 5;
+
+        // 锚点配置变量
+        [Header("锚点配置")]
+        [SerializeField] private Vector2 _ContentAnchorMin = Vector2.zero;
+        [SerializeField] private Vector2 _ContentAnchorMax = Vector2.one;
+        [SerializeField] private Vector2 _ItemAnchorMin = Vector2.zero;
+        [SerializeField] private Vector2 _ItemAnchorMax = Vector2.one;
 
         // 运行时数据
         [Header("运行时数据")]
@@ -74,10 +81,13 @@ namespace yxy
             // 初始化对象池
             InitializeObjectPool();
 
+            // 应用Content锚点设置
+            ApplyContentAnchors();
+
             // 计算Item大小
             if (Go_ItemPrefab != null)
             {
-                if (Go_ItemPrefab.TryGetComponent<IScrollViewItem>(out var item))
+                if (Go_ItemPrefab.TryGetComponent<IScrollRectItem>(out var item))
                 {
                     Vector2 size = item.GetItemSize();
                     _ItemSize = _ScrollDirection == EScrollDir.Horizontal ? size.x : size.y;
@@ -87,6 +97,51 @@ namespace yxy
             // 计算视口大小
             _ViewPortSize = _ScrollDirection == EScrollDir.Horizontal ?
                 Sr_ScrollRect.viewport.rect.width : Sr_ScrollRect.viewport.rect.height;
+        }
+
+        /// <summary>
+        /// 应用Content锚点设置
+        /// </summary>
+        private void ApplyContentAnchors()
+        {
+            if (Tf_Content != null)
+            {
+                // 限制锚点值在0-1之间
+                Vector2 clampedAnchorMin = new Vector2(
+                    Mathf.Clamp01(_ContentAnchorMin.x),
+                    Mathf.Clamp01(_ContentAnchorMin.y)
+                );
+                Vector2 clampedAnchorMax = new Vector2(
+                    Mathf.Clamp01(_ContentAnchorMax.x),
+                    Mathf.Clamp01(_ContentAnchorMax.y)
+                );
+
+                Tf_Content.anchorMin = clampedAnchorMin;
+                Tf_Content.anchorMax = clampedAnchorMax;
+            }
+        }
+
+        /// <summary>
+        /// 应用Item锚点设置
+        /// </summary>
+        /// <param name="itemTrans">Item的RectTransform</param>
+        private void ApplyItemAnchors(RectTransform itemTrans)
+        {
+            if (itemTrans != null)
+            {
+                // 限制锚点值在0-1之间
+                Vector2 clampedAnchorMin = new Vector2(
+                    Mathf.Clamp01(_ItemAnchorMin.x),
+                    Mathf.Clamp01(_ItemAnchorMin.y)
+                );
+                Vector2 clampedAnchorMax = new Vector2(
+                    Mathf.Clamp01(_ItemAnchorMax.x),
+                    Mathf.Clamp01(_ItemAnchorMax.y)
+                );
+
+                itemTrans.anchorMin = clampedAnchorMin;
+                itemTrans.anchorMax = clampedAnchorMax;
+            }
         }
 
         /// <summary>
@@ -279,6 +334,8 @@ namespace yxy
 
             // 设置Item的父节点和位置
             itemTrans.SetParent(Tf_Content);
+            // 应用Item锚点设置
+            ApplyItemAnchors(itemTrans);
             itemTrans.localScale = Vector3.one;
             itemTrans.localRotation = Quaternion.identity;
             itemObj.SetActive(true);
@@ -299,7 +356,7 @@ namespace yxy
             itemTrans.anchoredPosition = anchoredPos;
 
             // 设置Item数据
-            if (itemObj.TryGetComponent<IScrollViewItem>(out var scrollItem))
+            if (itemObj.TryGetComponent<IScrollRectItem>(out var scrollItem))
             {
                 scrollItem.OnActivate();
                 scrollItem.SetData(_DataList[index], index);
@@ -323,7 +380,7 @@ namespace yxy
             GameObject go = item.gameObject;
 
             // 调用Item的回收方法
-            if (item.TryGetComponent<IScrollViewItem>(out var scrollItem))
+            if (item.TryGetComponent<IScrollRectItem>(out var scrollItem))
             {
                 scrollItem.OnRecycle();
             }
@@ -440,7 +497,7 @@ namespace yxy
             {
                 if (GetItemIndex(item) == index)
                 {
-                    if (item.TryGetComponent<IScrollViewItem>(out var scrollItem))
+                    if (item.TryGetComponent<IScrollRectItem>(out var scrollItem))
                     {
                         scrollItem.SetData(newData, index);
                     }

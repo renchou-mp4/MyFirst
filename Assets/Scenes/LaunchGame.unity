@@ -321,7 +321,7 @@ MonoBehaviour:
   m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
 --- !u!114 &937584786
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -565,7 +565,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11405216, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_EntranceProcedureTypeName
-      value: LaunchGameProcedure
+      value: yxy.LaunchGameProcedure
       objectReference: {fileID: 0}
     - target: {fileID: 11405216, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_AvailableProcedureTypeNames.Array.size
@@ -573,23 +573,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11405216, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_AvailableProcedureTypeNames.Array.data[0]
-      value: CheckVersionProccedure
+      value: yxy.CheckVersionProccedure
       objectReference: {fileID: 0}
     - target: {fileID: 11405216, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_AvailableProcedureTypeNames.Array.data[1]
-      value: LaunchGameProcedure
+      value: yxy.LaunchGameProcedure
       objectReference: {fileID: 0}
     - target: {fileID: 11405216, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_AvailableProcedureTypeNames.Array.data[2]
-      value: MainGameProcedure
+      value: yxy.MainGameProcedure
       objectReference: {fileID: 0}
     - target: {fileID: 11405216, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_AvailableProcedureTypeNames.Array.data[3]
-      value: PreloadProcedure
+      value: yxy.PreloadProcedure
       objectReference: {fileID: 0}
     - target: {fileID: 11405216, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_AvailableProcedureTypeNames.Array.data[4]
-      value: UpdateAssetsProcedure
+      value: yxy.UpdateAssetsProcedure
       objectReference: {fileID: 0}
     - target: {fileID: 11454530, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_InstanceRoot
@@ -601,7 +601,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11454530, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_UIGroupHelperTypeName
-      value: UIGroupHelper
+      value: yxy.UIGroupHelper
       objectReference: {fileID: 0}
     - target: {fileID: 11454530, guid: d31d88493d0396a4eae886f8a67a7aa0, type: 3}
       propertyPath: m_UIGroups.Array.data[0].m_Name
