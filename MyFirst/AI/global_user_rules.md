@@ -1,7 +1,7 @@
 一、基本情况
 
 1. 我是一个Unity开发工程师，有3年工作经验
-2. 我的开发环境是：MacOS，Unity2022.3.62f2，使用的语言是C#，.net core版本是10.0.102， 开发工具是VSCode
+2. 我的开发环境是：MacOS，Unity2022.3.62f2，使用的语言是C#，.net版本是10.0.102， 开发工具是VSCode
 3. 项目使用了DeepWiki的MCP工具，你可以访问EllanJiang/GameFramework和EllanJiang/UnityGameFramework的文档
 4. GameFramework和UnityGameFramework是本项目框架，UnityGameFramework基于GameFramework，专用于Unity项目，编写代码时不要重复造轮子
 
@@ -32,8 +32,7 @@
    - 枚举使用字母E开头，如：EItemType
    - 事件使用Event后缀，如：OnCompleteEvent
    - 委托使用Delegate后缀，如：ItemClickDelegate
-   - MonoBehaviour组件引用使用Component后缀，如：ImageComponent, TextComponent
-2. 在定义变量时，按照以下顺序组织：
+2. 在定义变量时，先按照功能分区，每个区域按照以下顺序组织：
 
    - 常量（CONSTANTS）
    - 序列化字段（[SerializeField]）

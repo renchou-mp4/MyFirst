@@ -48,9 +48,9 @@ namespace yxy
         private int _MaxVisibleCount = 0;
 
         // 对象池相关变量
-        private IObjectPool<ScrollViewItemObject> _ObjectPool;
+        private IObjectPool<ScrollRectItemObject> _ObjectPool;
         private string _PoolName;
-        private Dictionary<GameObject, ScrollViewItemObject> _ItemMap = new Dictionary<GameObject, ScrollViewItemObject>();
+        private Dictionary<GameObject, ScrollRectItemObject> _ItemMap = new Dictionary<GameObject, ScrollRectItemObject>();
 
 
 
@@ -152,13 +152,13 @@ namespace yxy
             _PoolName = $"ScrollViewItemPool_{gameObject.GetInstanceID()}";
 
             // 检查对象池是否已存在，如果存在则销毁
-            if (GameEntry.ObjectPool.HasObjectPool<ScrollViewItemObject>(_PoolName))
+            if (GameEntry.ObjectPool.HasObjectPool<ScrollRectItemObject>(_PoolName))
             {
-                GameEntry.ObjectPool.DestroyObjectPool<ScrollViewItemObject>(_PoolName);
+                GameEntry.ObjectPool.DestroyObjectPool<ScrollRectItemObject>(_PoolName);
             }
 
             // 创建新的对象池
-            _ObjectPool = GameEntry.ObjectPool.CreateSingleSpawnObjectPool<ScrollViewItemObject>(
+            _ObjectPool = GameEntry.ObjectPool.CreateSingleSpawnObjectPool<ScrollRectItemObject>(
                 _PoolName, // 对象池名称
                 10, // 初始容量
                 3600f, // 对象过期时间（秒）
@@ -304,7 +304,7 @@ namespace yxy
             if (index < 0 || index >= _DataList.Count)
                 return;
 
-            ScrollViewItemObject itemObject = null;
+            ScrollRectItemObject itemObject = null;
 
             // 尝试从对象池获取Item
             if (_ObjectPool.CanSpawn())
@@ -316,7 +316,7 @@ namespace yxy
                 // 如果对象池没有可用对象，创建新对象
                 GameObject newItemObj = Instantiate(Go_ItemPrefab);
                 string itemName = $"Item_{index}";
-                itemObject = ScrollViewItemObject.Create(itemName, newItemObj);
+                itemObject = ScrollRectItemObject.Create(itemName, newItemObj);
                 _ObjectPool.Register(itemObject, true);
             }
 
@@ -389,7 +389,7 @@ namespace yxy
             _ActiveItems.Remove(item);
 
             // 从映射表中查找对应的对象池对象
-            if (_ItemMap.TryGetValue(go, out ScrollViewItemObject itemObject))
+            if (_ItemMap.TryGetValue(go, out ScrollRectItemObject itemObject))
             {
                 // 禁用GameObject并重置父节点
                 go.SetActive(false);
@@ -452,9 +452,9 @@ namespace yxy
             _ItemMap.Clear();
 
             // 销毁对象池
-            if (_ObjectPool != null && GameEntry.ObjectPool.HasObjectPool<ScrollViewItemObject>(_PoolName))
+            if (_ObjectPool != null && GameEntry.ObjectPool.HasObjectPool<ScrollRectItemObject>(_PoolName))
             {
-                GameEntry.ObjectPool.DestroyObjectPool<ScrollViewItemObject>(_PoolName);
+                GameEntry.ObjectPool.DestroyObjectPool<ScrollRectItemObject>(_PoolName);
                 _ObjectPool = null;
             }
         }

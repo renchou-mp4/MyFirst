@@ -12,17 +12,17 @@ namespace yxy
         /// <summary>
         /// ScrollView Item对象池包装类
         /// </summary>
-        private class ScrollViewItemObject : ObjectBase
+        private class ScrollRectItemObject : ObjectBase
         {
             private GameObject Go_Item;
 
-            public ScrollViewItemObject()
+            public ScrollRectItemObject()
             {
             }
 
-            public static ScrollViewItemObject Create(string name, GameObject go)
+            public static ScrollRectItemObject Create(string name, GameObject go)
             {
-                ScrollViewItemObject scrollViewItemObject = ReferencePool.Acquire<ScrollViewItemObject>();
+                ScrollRectItemObject scrollViewItemObject = ReferencePool.Acquire<ScrollRectItemObject>();
                 scrollViewItemObject.Initialize(name, go);
                 scrollViewItemObject.Go_Item = go;
                 return scrollViewItemObject;
