@@ -30,6 +30,7 @@ namespace yxy
         private RectTransform Rtf_Content;
         private RectTransform Rtf_Viewport;
         private EScrollDir1 _scrollDir = EScrollDir1.Vertical;    /// 滚动方向
+        private float _contentSize = 0;                          /// 内容尺寸
 
 
         [Header("对象池相关")]
@@ -45,7 +46,6 @@ namespace yxy
         [Header("Item预制体相关")]
 
         [SerializeField] private GameObject[] Go_ItemPrefabs;                    /// 列表项预制体
-        [SerializeField] private Vector2[] _itemSizes;                           /// 列表项大小
         [SerializeField] private Vector2 _itemAnchorMin = Vector2.one * -1;      /// item锚点最小值
         [SerializeField] private Vector2 _itemAnchorMax = Vector2.one * -1;      /// item锚点最大值
 
@@ -74,7 +74,10 @@ namespace yxy
 
             _dataList = dataList;
             InitItemPool();
+
+            CalculateContentSize();
             InitItems();
+
         }
 
         /// <summary>
@@ -112,7 +115,30 @@ namespace yxy
             //Debug.Log($"ScrollRectEx1 OnScrollValueChanged: {normalizedPosition}");
         }
 
+        /// <summary>
+        /// 计算Content大小
+        /// </summary>
+        private void CalculateContentSize()
+        {
+            Vector2 itemSize;
+            float totalSize = _itemPadding.x + _itemPadding.y - _itemSpace; //初始上下边距，提前减去最后一个间距
 
+            for (int i = 0; i < _dataList.Count; i++)
+            {
+                itemSize = _dataList[i].GetItemSize();
+                totalSize += (_scrollDir == EScrollDir1.Vertical ? itemSize.y : itemSize.x) + _itemSpace;
+            }
+
+            if (_scrollDir == EScrollDir1.Vertical)
+            {
+                Rtf_Content.sizeDelta = new Vector2(Rtf_Content.sizeDelta.x, totalSize);
+            }
+            else
+            {
+                Rtf_Content.sizeDelta = new Vector2(totalSize, Rtf_Content.sizeDelta.y);
+            }
+            _contentSize = totalSize;
+        }
 
         /// <summary>
         /// 初始化Item
@@ -123,16 +149,6 @@ namespace yxy
             {
                 Log.Error($"{_itemPoolName}: Item Prefab 是空！");
                 return;
-            }
-
-            //初始化大小
-            _itemSizes = new Vector2[Go_ItemPrefabs.Length];
-            for (int i = 0; i < Go_ItemPrefabs.Length; i++)
-            {
-                if (Go_ItemPrefabs[i].TryGetComponent(out ScrollRectItemObject1 item))
-                {
-                    _itemSizes[i] = item.GetItemSize();
-                }
             }
 
             //初始化锚点
@@ -153,47 +169,27 @@ namespace yxy
             _itemAnchorMax = _itemAnchorMax == Vector2.zero * -1 ? defaultAnchorMax : _itemAnchorMax;
 
             //初始化数据
-            int idx = 0;
-            foreach (var itemData in _dataList)
+            for (int i = 0; i < CalculateVisibleCount(); i++)
             {
-                if (itemData == null)
-                {
-                    Log.Warning($"{_itemPoolName}: Item Data {idx++} 是空，跳过该数据！");
-                    continue;
-                }
-
-                // if (Go_ItemPrefabs[i].TryGetComponent(out ScrollRectItemObject1 item))
-                // {
-
-                // }
 
             }
         }
 
-        private void CalculateContentSize()
+        private void GetItem()
         {
-            Vector2 itemSize;
-            float totalSize = _itemPadding.x + _itemPadding.y - _itemSpace; //初始上下边距，减去最后一个间距
 
-            for (int i = 0; i < _dataList.Count; i++)
-            {
-                itemSize = _dataList[i].GetItemSize();
-                totalSize += (_scrollDir == EScrollDir1.Vertical ? itemSize.y : itemSize.x) + _itemSpace;
-            }
-
-            if (_scrollDir == EScrollDir1.Vertical)
-            {
-                Rtf_Content.sizeDelta = new Vector2(Rtf_Content.sizeDelta.x, totalSize);
-            }
-            else
-            {
-                Rtf_Content.sizeDelta = new Vector2(totalSize, Rtf_Content.sizeDelta.y);
-            }
         }
 
-        private void CalculateMaxVisibleCount()
+        private int CalculateVisibleCount()
         {
-
+            float viewportSize = _scrollDir == EScrollDir1.Vertical ? Rtf_Viewport.rect.height : Rtf_Viewport.rect.width;
+            int count = 0;
+            for (int i = 0; i < _dataList.Count && viewportSize > 0; i++)
+            {
+                viewportSize -= _scrollDir == EScrollDir1.Vertical ? _dataList[i].GetItemSize().y : _dataList[i].GetItemSize().x;
+                count++;
+            }
+            return count;
         }
     }
 }
