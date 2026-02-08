@@ -59,8 +59,6 @@
                     "unityHubPath": "/Applications/Unity Hub.app/Contents/MacOS/Unity Hub"
                 },
                 "npmPackages": [
-                    "@google/generative-ai",
-                    "gemini-cli",
                     "oh-my-posh"
                 ],
                 "requiredTools": [
@@ -79,12 +77,10 @@
                 "architecture": "x64",
                 "developmentEnvironment": "Windows",
                 "paths": {
-                    "unityInstallationPath": "C:\\Program Files\\Unity\\Hub\\Editor\\{VERSION}\\Editor\\Unity.exe",
-                    "unityHubPath": "C:\\Program Files\\Unity Hub\\Unity Hub.exe"
+                    "unityInstallationPath": "D:\\Work\\Unity\\Editor\\2022.3.62f2\\Editor\\Unity.exe",
+                    "unityHubPath": "D:\\Work\\Unity\\Unity Hub\\Unity Hub.exe"
                 },
                 "npmPackages": [
-                    "@google/generative-ai",
-                    "gemini-cli",
                     "oh-my-posh"
                 ],
                 "requiredTools": [
