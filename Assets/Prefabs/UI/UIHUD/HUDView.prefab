@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4922396506556454106}
   - component: {fileID: 6615625881114746774}
-  - component: {fileID: 2891508626017746716}
+  - component: {fileID: 6797923100703913488}
   m_Layer: 0
   m_Name: ScrollView
   m_TagString: Untagged
@@ -68,7 +68,7 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &2891508626017746716
+--- !u!114 &6797923100703913488
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -77,7 +77,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 379948742691981208}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd9a3a66157774f408a9ab9a7bbaead1, type: 3}
+  m_Script: {fileID: 11500000, guid: e4bd88a68fc004a94929db4b65d901f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
@@ -88,16 +88,71 @@ MonoBehaviour:
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
-    SerializationNodes: []
-  Go_ItemPrefab: {fileID: 169710250607623702, guid: 09d597bacba074041ad00e3cc4d2ab22, type: 3}
-  Tf_Content: {fileID: 6143443944289323804}
-  _ScrollDirection: 1
-  _Spacing: 10
-  _PreloadCount: 3
-  _ContentAnchorMin: {x: 0.5, y: 0.5}
-  _ContentAnchorMax: {x: 0.5, y: 0.5}
-  _ItemAnchorMin: {x: 0.5, y: 0.5}
-  _ItemAnchorMax: {x: 0.5, y: 0.5}
+    SerializationNodes:
+    - Name: _itemPoolDic
+      Entry: 7
+      Data: 0|System.Collections.Generic.Dictionary`2[[System.String, mscorlib],[GameFramework.ObjectPool.IObjectPool`1[[yxy.ScrollRectItemObject1,
+        Assembly-CSharp]], GameFramework]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 1|System.Collections.Generic.GenericEqualityComparer`1[[System.String,
+        mscorlib]], mscorlib
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: _dataList
+      Entry: 7
+      Data: 2|System.Collections.Generic.List`1[[yxy.ScrollRectExData, Assembly-CSharp]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: _itemDict
+      Entry: 7
+      Data: 3|System.Collections.Generic.Dictionary`2[[UnityEngine.GameObject, UnityEngine.CoreModule],[yxy.ScrollRectItemObject1,
+        Assembly-CSharp]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 4|System.Collections.Generic.ObjectEqualityComparer`1[[UnityEngine.GameObject,
+        UnityEngine.CoreModule]], mscorlib
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+  _alignDir: 0
+  _itemPoolNames: []
+  _itemPoolExpireTime: 3.4028235e+38
+  _itemPoolCapacity: 2147483647
+  _itemPriority: 0
+  _preloadCount: 3
+  Go_ItemPrefabs: []
+  _itemAnchorMin: {x: -1, y: -1}
+  _itemAnchorMax: {x: -1, y: -1}
+  _itemSpace: 0
+  _itemPadding: {x: 0, y: 0}
 --- !u!1 &487962284821593369
 GameObject:
   m_ObjectHideFlags: 0
@@ -788,7 +843,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Btn_Setting: {fileID: 6079886679421323007}
-  Sr_ItemView: {fileID: 2891508626017746716}
+  Sr_ItemView: {fileID: 0}
 --- !u!1 &8839759723061587860
 GameObject:
   m_ObjectHideFlags: 0
