@@ -23,8 +23,5 @@ namespace yxy
         {
             Go_Item = null;
         }
-
-        public virtual void SetData(ScrollRectExData data, int index) { }
-
     }
 }

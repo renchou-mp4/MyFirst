@@ -9,7 +9,7 @@ namespace yxy
         [SerializeField]
         private ButtonCustom Btn_Setting;
         [SerializeField]
-        private ScrollRectEx Sr_ItemView;
+        private ScrollRectEx1 Sr_ItemView;
 
 
         protected override void OnInit(object userData)
@@ -17,19 +17,14 @@ namespace yxy
             base.OnInit(userData);
             Btn_Setting.onClick.AddListener(OnClickSetting);
 
-            Sr_ItemView.SetData(new List<object>()
+            List<ScrollRectExData> dataList = new List<ScrollRectExData>();
+            for (int i = 0; i < 20; i++)
             {
-                "item1",
-                "item2",
-                "item3",
-                "item4",
-                "item5",
-                "item6",
-                "item7",
-                "item8",
-                "item9",
-                "item10",
-            });
+                dataList.Add(new ScrollRectExData() { Data = $"item{i + 1}", PrefabIndex = 0 });
+            }
+
+            Sr_ItemView.SetData(dataList);
+
         }
 
         private void OnClickSetting()

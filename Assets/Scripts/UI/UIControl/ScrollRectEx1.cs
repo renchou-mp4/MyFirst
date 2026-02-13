@@ -20,17 +20,9 @@ namespace yxy
         Horizontal,
     }
 
-    public enum EAlignDir
-    {
-        CenterUp,
-        Center,
-        LeftCenter,
-    }
-
     public class ScrollRectExData
     {
         public object Data;
-        public Vector2 Size;
         public int PrefabIndex;
     }
 
@@ -39,7 +31,6 @@ namespace yxy
     public class ScrollRectEx1 : SerializedMonoBehaviour
     {
         [Header("ScrollRect相关")]
-        [SerializeField] private EAlignDir _alignDir = EAlignDir.CenterUp;       /// 对齐方向
         private ScrollRect Sr_ScrollRect;
         private RectTransform Rtf_Content;
         private RectTransform Rtf_Viewport;
@@ -64,8 +55,9 @@ namespace yxy
 
         [Header("Item预制体相关")]
         [SerializeField] private GameObject[] Go_ItemPrefabs;                    /// 列表项预制体
-        [SerializeField, ReadOnly] private Vector2 _itemAnchorMin;      /// item锚点Min
-        [SerializeField, ReadOnly] private Vector2 _itemAnchorMax;      /// item锚点Max
+        [SerializeField] private Vector2 _itemAnchorMin = Vector2.zero * -1;      /// item锚点Min
+        [SerializeField] private Vector2 _itemAnchorMax = Vector2.zero * -1;      /// item锚点Max
+        [SerializeField] private Vector2 _itemPivot = Vector2.zero * -1;          /// item轴心点
 
 
         [Header("数据相关")]
@@ -163,7 +155,8 @@ namespace yxy
                     Log.Error($"ItemPool_{gameObject.name}: 数据列表中存在空数据! 索引: {i}");
                     continue;
                 }
-                itemSize = _dataList[i].Size;
+
+                itemSize = Go_ItemPrefabs[_dataList[i].PrefabIndex].GetComponent<IScrollRectItem1>().GetItemSize();
                 totalSize += (_scrollDir == EScrollDir1.Vertical ? itemSize.y : itemSize.x) + _itemSpace;
             }
 
@@ -184,35 +177,27 @@ namespace yxy
             int count = 0;
             for (int i = 0; i < _dataList.Count && viewportSize > 0; i++)
             {
-                viewportSize -= _scrollDir == EScrollDir1.Vertical ? _dataList[i].Size.y : _dataList[i].Size.x;
+                float itemSize = _scrollDir == EScrollDir1.Vertical ?
+                Go_ItemPrefabs[_dataList[i].PrefabIndex].GetComponent<IScrollRectItem1>().GetItemSize().y :
+                Go_ItemPrefabs[_dataList[i].PrefabIndex].GetComponent<IScrollRectItem1>().GetItemSize().x;
+                viewportSize -= itemSize + _itemSpace;
                 count++;
             }
             return count;
         }
 
-        private Vector2 CalculateItemPosition(int index, ScrollRectItemObject1 item)
+        private Vector2 CalculateItemPosition(int index)
         {
-            Vector2 itemSize = _dataList[index].Size;
-            Vector2 pos = Vector2.zero;
-            switch (_alignDir)
-            {
-                case EAlignDir.CenterUp:
-                    pos = _scrollDir == EScrollDir1.Vertical ?
-                    new Vector2(0, -_curStartPos) :
-                    new Vector2(-_curStartPos - itemSize.x * 0.5f, 0);
+            //所有的排列都是从上到下，从左到右，锚点四合一，轴心点与锚点重合
+            //竖直滑动，上下影响位置；水平滑动，左右影响位置
 
-                    break;
-                case EAlignDir.Center:
-                    pos = _scrollDir == EScrollDir1.Vertical ?
-                    new Vector2(0, -_curStartPos - itemSize.y * 0.5f) :
-                    new Vector2(-_curStartPos - itemSize.x * 0.5f, 0);
-                    break;
-                case EAlignDir.LeftCenter:
-                    pos = _scrollDir == EScrollDir1.Vertical ?
-                    new Vector2(0, -_curStartPos - itemSize.y * 0.5f) :
-                    new Vector2(-_curStartPos, 0);
-                    break;
-            }
+            Vector2 itemSize = Go_ItemPrefabs[_dataList[index].PrefabIndex].GetComponent<IScrollRectItem1>().GetItemSize();
+
+            Vector2 pos =
+            _scrollDir == EScrollDir1.Vertical ?
+            new Vector2(0, -_curStartPos - itemSize.y * (1 - _itemAnchorMax.y)) :
+            new Vector2(-_curStartPos - itemSize.x * (1 - _itemAnchorMax.x), 0);
+
             _curStartPos += (_scrollDir == EScrollDir1.Vertical ? itemSize.y : itemSize.x) + _itemSpace;
             _itemPosList.Add(_curStartPos);
             return pos;
@@ -220,23 +205,21 @@ namespace yxy
 
         private void InitAnchor()
         {
-            _itemAnchorMin = Vector2.zero * 0.5f;
-            _itemAnchorMax = Vector2.zero * 0.5f;
+            if (_itemAnchorMin != Vector2.zero * -1 && _itemAnchorMax != Vector2.zero * -1 && _itemPivot != Vector2.zero * -1)
+                return;
 
-            switch (_alignDir)
+            Log.Warning("未设置Item锚点和轴心点，将根据滚动方向设置默认值！");
+            if (_scrollDir == EScrollDir1.Vertical)
             {
-                case EAlignDir.CenterUp:
-                    _itemAnchorMin = new Vector2(0.5f, 1);
-                    _itemAnchorMax = new Vector2(0.5f, 1);
-                    break;
-                case EAlignDir.Center:
-                    _itemAnchorMin = new Vector2(0.5f, 0.5f);
-                    _itemAnchorMax = new Vector2(0.5f, 0.5f);
-                    break;
-                case EAlignDir.LeftCenter:
-                    _itemAnchorMin = new Vector2(0, 0.5f);
-                    _itemAnchorMax = new Vector2(0, 0.5f);
-                    break;
+                _itemAnchorMin = new Vector2(0.5f, 1);
+                _itemAnchorMax = new Vector2(0.5f, 1);
+                _itemPivot = new Vector2(0.5f, 1);
+            }
+            else
+            {
+                _itemAnchorMin = new Vector2(0, 0.5f);
+                _itemAnchorMax = new Vector2(0, 0.5f);
+                _itemPivot = new Vector2(0, 0.5f);
             }
         }
 
@@ -257,7 +240,10 @@ namespace yxy
             for (int i = 0; i < showCount + _preloadCount; i++)
             {
                 ScrollRectItemObject1 item = GetItem(i);
-                item.SetData(_dataList[i], i);
+                if (item.Go_Item.TryGetComponent<IScrollRectItem1>(out IScrollRectItem1 tmpItem))
+                {
+                    tmpItem.SetData(_dataList[i].Data, i);
+                }
                 _itemActiveList.Add(item);
             }
 
@@ -275,7 +261,8 @@ namespace yxy
                     RectTransform itemRtf = _itemActiveList[i].Go_Item.GetComponent<RectTransform>();
                     itemRtf.anchorMin = _itemAnchorMin;
                     itemRtf.anchorMax = _itemAnchorMax;
-                    itemRtf.anchoredPosition = CalculateItemPosition(i, _itemActiveList[i]);
+                    itemRtf.pivot = _itemPivot;
+                    itemRtf.anchoredPosition = CalculateItemPosition(i);
                 }
             }
             _firstIndex = 0;
@@ -341,11 +328,11 @@ namespace yxy
                 return;
             }
 
+            //垂直方向
             //上划
             if (Sr_ScrollRect.velocity.y > 0)
             {
-                //假设CenterUp对齐方式
-                if (_alignDir == EAlignDir.CenterUp && Rtf_Viewport.anchoredPosition.y > _itemPosList[_firstIndex + 1])
+                if (Rtf_Content.anchoredPosition.y < _itemPosList[_firstIndex + 1])
                 {
                     //移除顶部Item，添加底部Item
                     ScrollRectItemObject1 topItem = _itemActiveList[_firstIndex];
@@ -356,20 +343,7 @@ namespace yxy
                     _lastIndex++;
 
                     //更新位置
-                    topItem.Go_Item.GetComponent<RectTransform>().anchoredPosition = CalculateItemPosition(_lastIndex, topItem);
-                }
-                else if (_alignDir == EAlignDir.Center && Rtf_Viewport.anchoredPosition.y > _itemPosList[_firstIndex] + _dataList[_firstIndex].Size.y)
-                {
-                    //移除顶部Item，添加底部Item
-                    ScrollRectItemObject1 topItem = _itemActiveList[_firstIndex];
-                    RecycleItem(topItem);
-
-                    //更新索引
-                    _firstIndex++;
-                    _lastIndex++;
-
-                    //更新位置
-                    topItem.Go_Item.GetComponent<RectTransform>().anchoredPosition = CalculateItemPosition(_lastIndex, topItem);
+                    topItem.Go_Item.GetComponent<RectTransform>().anchoredPosition = CalculateItemPosition(_lastIndex);
                 }
             }
         }
@@ -385,10 +359,11 @@ namespace yxy
                 {
                     _itemPoolDic[poolName].Unspawn(item);
                     _itemActiveList.Remove(obj);
+                    obj.Go_Item.SetSelfActive(false);
                 }
                 else
                 {
-                    Log.Error($"ItemPool_{gameObject.name}: 不存在名称为{poolName}的对象池！");
+                    Log.Error($"ItemPool_{gameObject.name}: 不存在名称为{poolName}】的对象池！");
                 }
             }
             else
