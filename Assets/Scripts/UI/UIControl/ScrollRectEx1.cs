@@ -59,6 +59,8 @@ namespace yxy
         [SerializeField] private Vector2 _itemAnchorMax = Vector2.zero * -1;      /// item锚点Max
         [SerializeField] private Vector2 _itemPivot = Vector2.zero * -1;          /// item轴心点
 
+        private List<Vector2> _itemSizeList = new();                   /// Item尺寸列表
+
 
         [Header("数据相关")]
         [SerializeField] private List<ScrollRectExData> _dataList = new();          /// 数据列表
@@ -75,12 +77,23 @@ namespace yxy
         {
             if (dataList == null)
             {
-                Log.Error($"ItemPool_{gameObject.name}: SetData传入的数据是空! ");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: SetData传入的数据是空! ");
                 return;
             }
 
             _dataList = dataList;
             InitItemPoolList();
+
+            //初始化Item大小
+            for (int i = 0; i < Go_ItemPrefabs.Length; i++)
+            {
+                if (Go_ItemPrefabs[i] == null)
+                {
+                    Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: Item Prefab {i} 是空！");
+                    continue;
+                }
+                _itemSizeList.Add(Go_ItemPrefabs[i].GetComponent<RectTransform>().sizeDelta);
+            }
 
             CalculateContentSize();
             InitItems();
@@ -107,7 +120,7 @@ namespace yxy
         {
             if (Go_ItemPrefabs == null || Go_ItemPrefabs.Length <= 0)
             {
-                Log.Error($"ItemPool_{gameObject.name}: Item Prefab 是空！");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: Item Prefab 是空！");
                 return;
             }
 
@@ -129,7 +142,7 @@ namespace yxy
             _itemPoolNames.Clear();
             for (int i = 0; i < Go_ItemPrefabs.Length; i++)
             {
-                string poolName = $"ItemPool_{GetInstanceID()}_{Go_ItemPrefabs[i].name}";
+                string poolName = $"ItemPool_{Go_ItemPrefabs[i].name}";
                 _itemPoolNames.Add(poolName);
                 _itemPoolDic.Add(poolName,
                     GameEntry.ObjectPool.CreateSingleSpawnObjectPool<ScrollRectItemObject1>(
@@ -145,19 +158,19 @@ namespace yxy
         /// </summary>
         private void CalculateContentSize()
         {
-            Vector2 itemSize;
             float totalSize = _itemPadding.x + _itemPadding.y - _itemSpace; //初始上下边距，提前减去最后一个间距
 
             for (int i = 0; i < _dataList.Count; i++)
             {
                 if (_dataList[i] == null)
                 {
-                    Log.Error($"ItemPool_{gameObject.name}: 数据列表中存在空数据! 索引: {i}");
+                    Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 数据列表中存在空数据! 索引: {i}");
                     continue;
                 }
 
-                itemSize = Go_ItemPrefabs[_dataList[i].PrefabIndex].GetComponent<IScrollRectItem1>().GetItemSize();
-                totalSize += (_scrollDir == EScrollDir1.Vertical ? itemSize.y : itemSize.x) + _itemSpace;
+                totalSize += (_scrollDir == EScrollDir1.Vertical ?
+                _itemSizeList[_dataList[i].PrefabIndex].y :
+                _itemSizeList[_dataList[i].PrefabIndex].x) + _itemSpace;
             }
 
             if (_scrollDir == EScrollDir1.Vertical)
@@ -178,8 +191,8 @@ namespace yxy
             for (int i = 0; i < _dataList.Count && viewportSize > 0; i++)
             {
                 float itemSize = _scrollDir == EScrollDir1.Vertical ?
-                Go_ItemPrefabs[_dataList[i].PrefabIndex].GetComponent<IScrollRectItem1>().GetItemSize().y :
-                Go_ItemPrefabs[_dataList[i].PrefabIndex].GetComponent<IScrollRectItem1>().GetItemSize().x;
+                _itemSizeList[_dataList[i].PrefabIndex].y :
+                _itemSizeList[_dataList[i].PrefabIndex].x;
                 viewportSize -= itemSize + _itemSpace;
                 count++;
             }
@@ -191,7 +204,7 @@ namespace yxy
             //所有的排列都是从上到下，从左到右，锚点四合一，轴心点与锚点重合
             //竖直滑动，上下影响位置；水平滑动，左右影响位置
 
-            Vector2 itemSize = Go_ItemPrefabs[_dataList[index].PrefabIndex].GetComponent<IScrollRectItem1>().GetItemSize();
+            Vector2 itemSize = _itemSizeList[_dataList[index].PrefabIndex];
 
             Vector2 pos =
             _scrollDir == EScrollDir1.Vertical ?
@@ -230,7 +243,7 @@ namespace yxy
         {
             if (Go_ItemPrefabs == null || Go_ItemPrefabs.Length <= 0)
             {
-                Log.Error($"ItemPool_{gameObject.name}: Item Prefab 是空！");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: Item Prefab 是空！");
                 return;
             }
 
@@ -240,7 +253,7 @@ namespace yxy
             for (int i = 0; i < showCount + _preloadCount; i++)
             {
                 ScrollRectItemObject1 item = GetItem(i);
-                if (item.Go_Item.TryGetComponent<IScrollRectItem1>(out IScrollRectItem1 tmpItem))
+                if (item.Go_Item.TryGetComponent(out IScrollRectItem1 tmpItem))
                 {
                     tmpItem.SetData(_dataList[i].Data, i);
                 }
@@ -266,7 +279,7 @@ namespace yxy
                 }
             }
             _firstIndex = 0;
-            _lastIndex = showCount - 1;
+            _lastIndex = showCount + _preloadCount - 1;
 
 
         }
@@ -275,12 +288,12 @@ namespace yxy
         {
             if (_itemPoolDic == null)
             {
-                Log.Error($"ItemPool_{gameObject.name}: itemPoolDic 是空！");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: itemPoolDic 是空！");
                 return null;
             }
             if (_dataList[index] == null)
             {
-                Log.Error($"ItemPool_{gameObject.name}: 数据列表中存在空数据! 索引: {index}");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 数据列表中存在空数据! 索引: {index}");
                 return null;
             }
 
@@ -289,26 +302,23 @@ namespace yxy
 
             if (!_itemPoolDic.ContainsKey(poolName))
             {
-                Log.Error($"ItemPool_{gameObject.name}: 不存在名称为{poolName}的对象池！");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 不存在名称为{poolName}的对象池！");
                 return null;
             }
 
             ScrollRectItemObject1 item;
-            if (_itemPoolDic[poolName].CanSpawn())
+            if (!_itemPoolDic[poolName].CanSpawn())
             {
-                item = _itemPoolDic[poolName].Spawn();
-            }
-            else
-            {
-                if (Go_ItemPrefabs == null || Go_ItemPrefabs.Length <= prefabIndex)
+                if (Go_ItemPrefabs == null || prefabIndex >= Go_ItemPrefabs.Length || prefabIndex < 0)
                 {
-                    Log.Error($"ItemPool_{gameObject.name}: Item Prefab 数组越界！ prefabIndex: {prefabIndex}");
+                    Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: Item Prefab 数组越界！ prefabIndex: {prefabIndex}");
                     return null;
                 }
                 GameObject go = Instantiate(Go_ItemPrefabs[prefabIndex], Rtf_Content);
-                item = ScrollRectItemObject1.Create(Go_ItemPrefabs[prefabIndex].name, go);
+                item = ScrollRectItemObject1.Create(Go_ItemPrefabs[prefabIndex].name, go, prefabIndex);
                 _itemPoolDic[poolName].Register(item, false);
             }
+            item = _itemPoolDic[poolName].Spawn(Go_ItemPrefabs[prefabIndex].name);
             return item;
         }
 
@@ -322,9 +332,9 @@ namespace yxy
         {
             if (_dataList == null || _dataList.Count == 0) return;
 
-            if (_firstIndex < 0 || _firstIndex >= _itemActiveList.Count || _lastIndex < 0 || _lastIndex >= _itemActiveList.Count)
+            if (_firstIndex < 0 || _firstIndex >= _dataList.Count || _lastIndex < 0 || _lastIndex >= _dataList.Count)
             {
-                Log.Error($"ItemPool_{gameObject.name}: 活跃Item索引越界！ firstIndex: {_firstIndex}, lastIndex: {_lastIndex}");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 活跃Item索引越界！ firstIndex: {_firstIndex}, lastIndex: {_lastIndex}");
                 return;
             }
 
@@ -332,18 +342,14 @@ namespace yxy
             //上划
             if (Sr_ScrollRect.velocity.y > 0)
             {
-                if (Rtf_Content.anchoredPosition.y < _itemPosList[_firstIndex + 1])
+                if (Rtf_Content.anchoredPosition.y > _itemPosList[_firstIndex + 1])
                 {
-                    //移除顶部Item，添加底部Item
-                    ScrollRectItemObject1 topItem = _itemActiveList[_firstIndex];
+                    //移除顶部Item
+                    ScrollRectItemObject1 topItem = _itemActiveList[0];
                     RecycleItem(topItem);
 
                     //更新索引
                     _firstIndex++;
-                    _lastIndex++;
-
-                    //更新位置
-                    topItem.Go_Item.GetComponent<RectTransform>().anchoredPosition = CalculateItemPosition(_lastIndex);
                 }
             }
         }
@@ -354,21 +360,21 @@ namespace yxy
 
             if (obj.Go_Item.TryGetComponent<IScrollRectItem1>(out var item))
             {
-                string poolName = _itemPoolNames[item.GetPrefabIndex()];
+                string poolName = _itemPoolNames[obj.PrefabIndex];
                 if (_itemPoolDic.ContainsKey(poolName))
                 {
-                    _itemPoolDic[poolName].Unspawn(item);
+                    _itemPoolDic[poolName].Unspawn(obj.Go_Item);
                     _itemActiveList.Remove(obj);
                     obj.Go_Item.SetSelfActive(false);
                 }
                 else
                 {
-                    Log.Error($"ItemPool_{gameObject.name}: 不存在名称为{poolName}】的对象池！");
+                    Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 不存在名称为{poolName}的对象池！");
                 }
             }
             else
             {
-                Log.Error($"ItemPool_{gameObject.name}: 回收对象【{obj.Go_Item.name}】不包含IScrollRectItem组件！");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 回收对象【{obj.Go_Item.name}】不包含IScrollRectItem组件！");
             }
         }
     }
