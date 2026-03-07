@@ -268,6 +268,7 @@ namespace yxy
                 return;
             }
 
+            //BUG 由于Item大小不固定，若第一个Item占据全部空间，会导致始终只能显示一个Item
             int showCount = CalculateVisibleCount();
 
             //初始化数据
