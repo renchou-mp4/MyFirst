@@ -9,7 +9,7 @@ namespace yxy
         [SerializeField]
         private ButtonCustom Btn_Setting;
         [SerializeField]
-        private ScrollRectEx1 Sr_ItemView;
+        private ScrollRectEx Sr_ItemView;
 
 
         protected override void OnInit(object userData)

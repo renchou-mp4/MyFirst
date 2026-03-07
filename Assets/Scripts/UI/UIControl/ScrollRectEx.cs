@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using GameFramework.ObjectPool;
 using Sirenix.OdinInspector;
@@ -9,185 +10,168 @@ namespace yxy
 {
     public enum EScrollDir
     {
+        /// <summary>
+        /// 垂直滚动
+        /// </summary>
+        Vertical,
+        /// <summary>
+        /// 水平滚动
+        /// </summary>
         Horizontal,
-        Vertical
     }
 
-    [RequireComponent(typeof(ScrollRect))]
-    public partial class ScrollRectEx : SerializedMonoBehaviour
+    public class ScrollRectExData
     {
-        // Unity特有类型变量
-        [SerializeField] private GameObject Go_ItemPrefab;
-        [SerializeField] private RectTransform Tf_Content;
+        public object Data;
+        public int PrefabIndex;
+    }
+
+
+    [RequireComponent(typeof(ScrollRect))]
+    public class ScrollRectEx : SerializedMonoBehaviour
+    {
+        [Header("ScrollRect相关")]
         private ScrollRect Sr_ScrollRect;
-
-        // 配置变量
-        [Header("滚动配置")]
-        [SerializeField] private EScrollDir _ScrollDirection = EScrollDir.Vertical;
-        [SerializeField] private float _Spacing = 0f;
-        [SerializeField] private int _PreloadCount = 5;
-
-        // 锚点配置变量
-        [Header("锚点配置")]
-        [SerializeField] private Vector2 _ContentAnchorMin = Vector2.zero;
-        [SerializeField] private Vector2 _ContentAnchorMax = Vector2.one;
-        [SerializeField] private Vector2 _ItemAnchorMin = Vector2.zero;
-        [SerializeField] private Vector2 _ItemAnchorMax = Vector2.one;
-
-        // 运行时数据
-        [Header("运行时数据")]
-        [ShowInInspector, ReadOnly] private List<object> _DataList = new List<object>();
-        [ShowInInspector, ReadOnly] private List<RectTransform> _ActiveItems = new List<RectTransform>();
-        [ShowInInspector, ReadOnly] private int _FirstVisibleIndex = 0;
-        [ShowInInspector, ReadOnly] private int _LastVisibleIndex = 0;
-
-        // 计算和状态变量
-        private float _ContentSize;
-        private float _ItemSize;
-        private float _ViewPortSize;
-        private int _MaxVisibleCount = 0;
-
-        // 对象池相关变量
-        private IObjectPool<ScrollRectItemObject> _ObjectPool;
-        private string _PoolName;
-        private Dictionary<GameObject, ScrollRectItemObject> _ItemMap = new Dictionary<GameObject, ScrollRectItemObject>();
+        private RectTransform Rtf_Content;
+        private RectTransform Rtf_Viewport;
+        private EScrollDir _scrollDir = EScrollDir.Vertical;
+        private float _contentSize = 0;
+        /// 当前起始位置
+        private float _curStartPos = 0;
 
 
 
-        /// <summary>
-        /// 初始化ScrollViewEx
-        /// </summary>
-        private void Awake()
+        [Header("对象池相关")]
+        /// 对象池字典<名称，对象池>
+        [SerializeField, ReadOnly] private Dictionary<string, IObjectPool<ScrollRectItemObject>> _itemPoolDic = new();
+        /// 活跃的Item列表
+        [SerializeField, ReadOnly] private List<ScrollRectItemObject> _itemActiveList = new();
+        /// 可见的Item列表                  
+        [SerializeField, ReadOnly] private List<ScrollRectItemObject> _itemVisibleList = new();
+        /// 对象池名称列表               
+        [SerializeField, ReadOnly] private List<string> _itemPoolNames = new();
+        /// 对象池过期时间
+        [SerializeField] private float _itemPoolExpireTime = float.MaxValue;
+        /// 对象池容量  
+        [SerializeField] private int _itemPoolCapacity = int.MaxValue;
+        /// 对象池优先级        
+        [SerializeField] private int _itemPriority = 0;
+        /// 预加载数量                  
+        [SerializeField] private int _preloadCount = 3;
+        /// Item位置列表（相对于Content起始位置的偏移）     
+        private List<float> _itemPosList = new();
+        /// 第一个Item下标                  
+        private int _firstIndex;
+        /// 最后一个Item下标            
+        private int _lastIndex;
+
+
+        [Header("Item预制体相关")]
+        /// 列表项预制体
+        [SerializeField] private GameObject[] Go_ItemPrefabs;
+        /// item锚点Min        
+        [SerializeField] private Vector2 _itemAnchorMin = Vector2.zero * -1;
+        /// item锚点Max
+        [SerializeField] private Vector2 _itemAnchorMax = Vector2.zero * -1;
+        /// item轴心点
+        [SerializeField] private Vector2 _itemPivot = Vector2.zero * -1;
+
+        /// Item尺寸列表
+        private List<Vector2> _itemSizeList = new();
+
+
+        [Header("数据相关")]
+        /// 数据列表
+        [SerializeField] private List<ScrollRectExData> _dataList = new();
+        /// Item间距      
+        [SerializeField] private float _itemSpace = 0;
+        /// Item边距
+        [SerializeField] private Vector2 _itemPadding = Vector2.zero;
+
+
+        void Awake()
         {
-            Sr_ScrollRect = GetComponent<ScrollRect>();
-            if (Sr_ScrollRect == null)
+            InitScrollRect();
+        }
+
+        public void SetData(List<ScrollRectExData> dataList)
+        {
+            if (dataList == null)
             {
-                Log.Error("ScrollViewEx: ScrollRect component not found!");
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: SetData传入的数据是空! ");
                 return;
             }
 
-            if (Tf_Content == null)
+            _dataList = dataList;
+            InitItemPoolList();
+
+            //初始化Item大小
+            for (int i = 0; i < Go_ItemPrefabs.Length; i++)
             {
-                Tf_Content = Sr_ScrollRect.content;
-            }
-
-            // 设置滚动方向
-            Sr_ScrollRect.horizontal = _ScrollDirection == EScrollDir.Horizontal;
-            Sr_ScrollRect.vertical = _ScrollDirection == EScrollDir.Vertical;
-
-            // 注册滚动事件
-            Sr_ScrollRect.onValueChanged.AddListener(OnScrollValueChanged);
-
-            // 初始化对象池
-            InitializeObjectPool();
-
-            // 应用Content锚点设置
-            ApplyContentAnchors();
-
-            // 计算Item大小
-            if (Go_ItemPrefab != null)
-            {
-                if (Go_ItemPrefab.TryGetComponent<IScrollRectItem>(out var item))
+                if (Go_ItemPrefabs[i] == null)
                 {
-                    Vector2 size = item.GetItemSize();
-                    _ItemSize = _ScrollDirection == EScrollDir.Horizontal ? size.x : size.y;
+                    Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: Item Prefab {i} 是空！");
+                    continue;
                 }
+                _itemSizeList.Add(Go_ItemPrefabs[i].GetComponent<RectTransform>().sizeDelta);
             }
 
-            // 计算视口大小
-            _ViewPortSize = _ScrollDirection == EScrollDir.Horizontal ?
-                Sr_ScrollRect.viewport.rect.width : Sr_ScrollRect.viewport.rect.height;
+            CalculateContentSize();
+            InitItems();
+
         }
 
         /// <summary>
-        /// 应用Content锚点设置
+        /// 初始化ScrollRect
         /// </summary>
-        private void ApplyContentAnchors()
+        private void InitScrollRect()
         {
-            if (Tf_Content != null)
-            {
-                // 限制锚点值在0-1之间
-                Vector2 clampedAnchorMin = new Vector2(
-                    Mathf.Clamp01(_ContentAnchorMin.x),
-                    Mathf.Clamp01(_ContentAnchorMin.y)
-                );
-                Vector2 clampedAnchorMax = new Vector2(
-                    Mathf.Clamp01(_ContentAnchorMax.x),
-                    Mathf.Clamp01(_ContentAnchorMax.y)
-                );
+            Sr_ScrollRect = GetComponent<ScrollRect>();
+            Rtf_Content = Sr_ScrollRect.content;
+            Rtf_Viewport = Sr_ScrollRect.viewport;
 
-                Tf_Content.anchorMin = clampedAnchorMin;
-                Tf_Content.anchorMax = clampedAnchorMax;
-            }
-        }
-
-        /// <summary>
-        /// 应用Item锚点设置
-        /// </summary>
-        /// <param name="itemTrans">Item的RectTransform</param>
-        private void ApplyItemAnchors(RectTransform itemTrans)
-        {
-            if (itemTrans != null)
-            {
-                // 限制锚点值在0-1之间
-                Vector2 clampedAnchorMin = new Vector2(
-                    Mathf.Clamp01(_ItemAnchorMin.x),
-                    Mathf.Clamp01(_ItemAnchorMin.y)
-                );
-                Vector2 clampedAnchorMax = new Vector2(
-                    Mathf.Clamp01(_ItemAnchorMax.x),
-                    Mathf.Clamp01(_ItemAnchorMax.y)
-                );
-
-                itemTrans.anchorMin = clampedAnchorMin;
-                itemTrans.anchorMax = clampedAnchorMax;
-            }
+            _scrollDir = Sr_ScrollRect.vertical ? EScrollDir.Vertical : EScrollDir.Horizontal;
+            Sr_ScrollRect.onValueChanged.AddListener(OnScrollValueChanged);
         }
 
         /// <summary>
         /// 初始化对象池
         /// </summary>
-        private void InitializeObjectPool()
+        private void InitItemPoolList()
         {
-            _PoolName = $"ScrollViewItemPool_{gameObject.GetInstanceID()}";
-
-            // 检查对象池是否已存在，如果存在则销毁
-            if (GameEntry.ObjectPool.HasObjectPool<ScrollRectItemObject>(_PoolName))
+            if (Go_ItemPrefabs == null || Go_ItemPrefabs.Length <= 0)
             {
-                GameEntry.ObjectPool.DestroyObjectPool<ScrollRectItemObject>(_PoolName);
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: Item Prefab 是空！");
+                return;
             }
 
-            // 创建新的对象池
-            _ObjectPool = GameEntry.ObjectPool.CreateSingleSpawnObjectPool<ScrollRectItemObject>(
-                _PoolName, // 对象池名称
-                10, // 初始容量
-                3600f, // 对象过期时间（秒）
-                0); // 对象池优先级
-        }
+            //若存在旧对象池则先销毁
+            if (_itemPoolDic is { Count: > 0 })
+            {
+                foreach (var poolKV in _itemPoolDic)
+                {
+                    if (poolKV.Value != null && GameEntry.ObjectPool.HasObjectPool<ScrollRectItemObject>(poolKV.Key))
+                    {
+                        GameEntry.ObjectPool.DestroyObjectPool<ScrollRectItemObject>(poolKV.Key);
+                    }
+                }
+                _itemPoolDic.Clear();
+            }
 
-        /// <summary>
-        /// 设置数据源
-        /// </summary>
-        /// <param name="dataList">数据源列表</param>
-        public void SetData(List<object> dataList)
-        {
-            _DataList.Clear();
-            _DataList.AddRange(dataList);
 
-            // 重置滚动位置
-            Sr_ScrollRect.normalizedPosition = _ScrollDirection == EScrollDir.Horizontal ? Vector2.right : Vector2.up;
-
-            // 回收所有活跃的Item
-            RecycleAllItems();
-
-            // 计算Content大小
-            CalculateContentSize();
-
-            // 计算最大可见数量
-            CalculateMaxVisibleCount();
-
-            // 更新可见的Item
-            UpdateVisibleItems();
+            //创建新的对象池列表
+            _itemPoolNames.Clear();
+            for (int i = 0; i < Go_ItemPrefabs.Length; i++)
+            {
+                string poolName = $"ItemPool_{Go_ItemPrefabs[i].name}";
+                _itemPoolNames.Add(poolName);
+                _itemPoolDic.Add(poolName,
+                    GameEntry.ObjectPool.CreateSingleSpawnObjectPool<ScrollRectItemObject>(
+                        poolName,
+                        _itemPoolCapacity,
+                        _itemPoolExpireTime,
+                        _itemPriority));
+            }
         }
 
         /// <summary>
@@ -195,359 +179,227 @@ namespace yxy
         /// </summary>
         private void CalculateContentSize()
         {
-            int count = _DataList.Count;
-            if (count == 0)
+            float totalSize = _itemPadding.x + _itemPadding.y - _itemSpace; //初始上下边距，提前减去最后一个间距
+
+            for (int i = 0; i < _dataList.Count; i++)
             {
-                _ContentSize = 0;
-                return;
+                if (_dataList[i] == null)
+                {
+                    Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 数据列表中存在空数据! 索引: {i}");
+                    continue;
+                }
+
+                totalSize += (_scrollDir == EScrollDir.Vertical ?
+                _itemSizeList[_dataList[i].PrefabIndex].y :
+                _itemSizeList[_dataList[i].PrefabIndex].x) + _itemSpace;
             }
 
-            _ContentSize = count * _ItemSize + (count - 1) * _Spacing;
-
-            Vector2 size = Tf_Content.sizeDelta;
-            if (_ScrollDirection == EScrollDir.Horizontal)
+            if (_scrollDir == EScrollDir.Vertical)
             {
-                size.x = _ContentSize;
+                Rtf_Content.sizeDelta = new Vector2(Rtf_Content.sizeDelta.x, totalSize);
             }
             else
             {
-                size.y = _ContentSize;
+                Rtf_Content.sizeDelta = new Vector2(totalSize, Rtf_Content.sizeDelta.y);
             }
-            Tf_Content.sizeDelta = size;
+            _contentSize = totalSize;
+        }
+
+        private int CalculateVisibleCount()
+        {
+            float viewportSize = _scrollDir == EScrollDir.Vertical ? Rtf_Viewport.rect.height : Rtf_Viewport.rect.width;
+            int count = 0;
+            for (int i = 0; i < _dataList.Count && viewportSize > 0; i++)
+            {
+                float itemSize = _scrollDir == EScrollDir.Vertical ?
+                _itemSizeList[_dataList[i].PrefabIndex].y :
+                _itemSizeList[_dataList[i].PrefabIndex].x;
+                viewportSize -= itemSize + _itemSpace;
+                count++;
+            }
+            return count;
+        }
+
+        private Vector2 CalculateItemPosition(int index)
+        {
+            //所有的排列都是从上到下，从左到右，锚点四合一，轴心点与锚点重合
+            //竖直滑动，上下影响位置；水平滑动，左右影响位置
+
+            Vector2 itemSize = _itemSizeList[_dataList[index].PrefabIndex];
+
+            Vector2 pos =
+            _scrollDir == EScrollDir.Vertical ?
+            new Vector2(0, -_curStartPos - itemSize.y * (1 - _itemAnchorMax.y)) :
+            new Vector2(-_curStartPos - itemSize.x * (1 - _itemAnchorMax.x), 0);
+
+            _curStartPos += (_scrollDir == EScrollDir.Vertical ? itemSize.y : itemSize.x) + _itemSpace;
+            _itemPosList.Add(_curStartPos);
+            return pos;
+        }
+
+        private void InitAnchor()
+        {
+            if (_itemAnchorMin != Vector2.zero * -1 && _itemAnchorMax != Vector2.zero * -1 && _itemPivot != Vector2.zero * -1)
+                return;
+
+            Log.Warning("未设置Item锚点和轴心点，将根据滚动方向设置默认值！");
+            if (_scrollDir == EScrollDir.Vertical)
+            {
+                _itemAnchorMin = new Vector2(0.5f, 1);
+                _itemAnchorMax = new Vector2(0.5f, 1);
+                _itemPivot = new Vector2(0.5f, 1);
+            }
+            else
+            {
+                _itemAnchorMin = new Vector2(0, 0.5f);
+                _itemAnchorMax = new Vector2(0, 0.5f);
+                _itemPivot = new Vector2(0, 0.5f);
+            }
         }
 
         /// <summary>
-        /// 计算最大可见数量
+        /// 初始化Item
         /// </summary>
-        private void CalculateMaxVisibleCount()
+        private void InitItems()
         {
-            if (_ItemSize <= 0)
+            if (Go_ItemPrefabs == null || Go_ItemPrefabs.Length <= 0)
             {
-                _MaxVisibleCount = 0;
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: Item Prefab 是空！");
                 return;
             }
 
-            // 可视项目数 + ViewPort外上下两个方向的预加载项目数
-            _MaxVisibleCount = Mathf.CeilToInt(_ViewPortSize / _ItemSize) + _PreloadCount * 2;
-            _MaxVisibleCount = Mathf.Min(_MaxVisibleCount, _DataList.Count);
+            int showCount = CalculateVisibleCount();
+
+            //初始化数据
+            for (int i = 0; i < showCount + _preloadCount; i++)
+            {
+                ScrollRectItemObject item = GetItem(i);
+                if (item.Go_Item.TryGetComponent(out IScrollRectItem1 tmpItem))
+                {
+                    tmpItem.SetData(_dataList[i].Data, i);
+                }
+                _itemActiveList.Add(item);
+            }
+
+            //初始化锚点
+            InitAnchor();
+
+            //初始化位置
+            _itemPosList.Clear();
+            _itemPosList.Add(0);
+            _curStartPos = _scrollDir == EScrollDir.Vertical ? _itemPadding.y : _itemPadding.x;
+            for (int i = 0; i < _itemActiveList.Count; i++)
+            {
+                if (_itemActiveList[i] != null)
+                {
+                    RectTransform itemRtf = _itemActiveList[i].Go_Item.GetComponent<RectTransform>();
+                    itemRtf.anchorMin = _itemAnchorMin;
+                    itemRtf.anchorMax = _itemAnchorMax;
+                    itemRtf.pivot = _itemPivot;
+                    itemRtf.anchoredPosition = CalculateItemPosition(i);
+                }
+            }
+            _firstIndex = 0;
+            _lastIndex = showCount + _preloadCount - 1;
+
+
         }
 
-        /// <summary>
-        /// 更新可见的Item
-        /// </summary>
+        private ScrollRectItemObject GetItem(int index)
+        {
+            if (_itemPoolDic == null)
+            {
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: itemPoolDic 是空！");
+                return null;
+            }
+            if (_dataList[index] == null)
+            {
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 数据列表中存在空数据! 索引: {index}");
+                return null;
+            }
+
+            int prefabIndex = _dataList[index].PrefabIndex;
+            string poolName = _itemPoolNames[prefabIndex];
+
+            if (!_itemPoolDic.ContainsKey(poolName))
+            {
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 不存在名称为{poolName}的对象池！");
+                return null;
+            }
+
+            ScrollRectItemObject item;
+            if (!_itemPoolDic[poolName].CanSpawn())
+            {
+                if (Go_ItemPrefabs == null || prefabIndex >= Go_ItemPrefabs.Length || prefabIndex < 0)
+                {
+                    Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: Item Prefab 数组越界！ prefabIndex: {prefabIndex}");
+                    return null;
+                }
+                GameObject go = Instantiate(Go_ItemPrefabs[prefabIndex], Rtf_Content);
+                item = ScrollRectItemObject.Create(Go_ItemPrefabs[prefabIndex].name, go, prefabIndex);
+                _itemPoolDic[poolName].Register(item, false);
+            }
+            item = _itemPoolDic[poolName].Spawn(Go_ItemPrefabs[prefabIndex].name);
+            return item;
+        }
+
+
+        private void OnScrollValueChanged(Vector2 normalizedPosition)
+        {
+            UpdateVisibleItems();
+        }
+
         private void UpdateVisibleItems()
         {
-            if (_DataList.Count == 0)
-                return;
+            if (_dataList == null || _dataList.Count == 0) return;
 
-            // 计算当前可见区域的起始和结束位置
-            float scrollPosition = _ScrollDirection == EScrollDir.Horizontal ?
-                Tf_Content.anchoredPosition.x : -Tf_Content.anchoredPosition.y;
-
-            int newFirstVisibleIndex = Mathf.Max(0, Mathf.FloorToInt(scrollPosition / (_ItemSize + _Spacing)) - _PreloadCount);
-            int newLastVisibleIndex = Mathf.Min(_DataList.Count - 1,
-                Mathf.CeilToInt((scrollPosition + _ViewPortSize) / (_ItemSize + _Spacing)) + _PreloadCount);
-
-            // 如果可见范围没有变化，不需要更新
-            if (newFirstVisibleIndex == _FirstVisibleIndex && newLastVisibleIndex == _LastVisibleIndex)
-                return;
-
-            _FirstVisibleIndex = newFirstVisibleIndex;
-            _LastVisibleIndex = newLastVisibleIndex;
-
-            // 回收不在可见范围内的Item
-            List<RectTransform> itemsToRecycle = new List<RectTransform>();
-            foreach (RectTransform item in _ActiveItems)
+            if (_firstIndex < 0 || _firstIndex >= _dataList.Count || _lastIndex < 0 || _lastIndex >= _dataList.Count)
             {
-                int itemIndex = GetItemIndex(item);
-                if (itemIndex < _FirstVisibleIndex || itemIndex > _LastVisibleIndex)
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 活跃Item索引越界！ firstIndex: {_firstIndex}, lastIndex: {_lastIndex}");
+                return;
+            }
+
+            //垂直方向
+            //上划
+            //TODO 上划后索引的更新。需求是保持加载出来的Item数量固定，无论移除顶部Item后是否有新的Item加载出来，先保持不变，后续根据实际情况调整
+            if (Sr_ScrollRect.velocity.y > 0)
+            {
+                if (Rtf_Content.anchoredPosition.y > _itemPosList[_firstIndex + 1])
                 {
-                    itemsToRecycle.Add(item);
+                    //移除顶部Item
+                    ScrollRectItemObject topItem = _itemActiveList[0];
+                    RecycleItem(topItem);
+
+                    //更新索引
+                    _firstIndex++;
                 }
             }
-
-            foreach (RectTransform item in itemsToRecycle)
-            {
-                RecycleItem(item);
-            }
-
-            // 创建或复用可见范围内的Item
-            for (int i = _FirstVisibleIndex; i <= _LastVisibleIndex; i++)
-            {
-                if (!IsItemActive(i))
-                {
-                    CreateOrReuseItem(i);
-                }
-            }
+            //TODO 下划
+            //TODO 不同锚点的处理
         }
 
-        /// <summary>
-        /// 判断指定索引的Item是否已经激活
-        /// </summary>
-        private bool IsItemActive(int index)
+        private void RecycleItem(ScrollRectItemObject obj)
         {
-            foreach (RectTransform item in _ActiveItems)
+            if (obj == null) return;
+
+            if (obj.Go_Item.TryGetComponent<IScrollRectItem1>(out var item))
             {
-                if (GetItemIndex(item) == index)
+                string poolName = _itemPoolNames[obj.PrefabIndex];
+                if (_itemPoolDic.ContainsKey(poolName))
                 {
-                    return true;
+                    _itemPoolDic[poolName].Unspawn(obj.Go_Item);
+                    _itemActiveList.Remove(obj);
+                    obj.Go_Item.SetSelfActive(false);
                 }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 创建或复用Item
-        /// </summary>
-        private void CreateOrReuseItem(int index)
-        {
-            if (index < 0 || index >= _DataList.Count)
-                return;
-
-            ScrollRectItemObject itemObject = null;
-
-            // 尝试从对象池获取Item
-            if (_ObjectPool.CanSpawn())
-            {
-                itemObject = _ObjectPool.Spawn();
+                else
+                {
+                    Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 不存在名称为{poolName}的对象池！");
+                }
             }
             else
             {
-                // 如果对象池没有可用对象，创建新对象
-                GameObject newItemObj = Instantiate(Go_ItemPrefab);
-                string itemName = $"Item_{index}";
-                itemObject = ScrollRectItemObject.Create(itemName, newItemObj);
-                _ObjectPool.Register(itemObject, true);
-            }
-
-            if (itemObject == null)
-                return;
-
-            GameObject itemObj = itemObject.GameObject;
-            RectTransform itemTrans = itemObj.GetComponent<RectTransform>();
-
-            // 添加到映射表
-            if (!_ItemMap.ContainsKey(itemObj))
-            {
-                _ItemMap.Add(itemObj, itemObject);
-            }
-
-            // 设置Item的父节点和位置
-            itemTrans.SetParent(Tf_Content);
-            // 应用Item锚点设置
-            ApplyItemAnchors(itemTrans);
-            itemTrans.localScale = Vector3.one;
-            itemTrans.localRotation = Quaternion.identity;
-            itemObj.SetActive(true);
-
-            // 设置Item的位置
-            float position = index * (_ItemSize + _Spacing);
-            Vector2 anchoredPos = itemTrans.anchoredPosition;
-            if (_ScrollDirection == EScrollDir.Horizontal)
-            {
-                anchoredPos.x = position;
-                anchoredPos.y = 0;
-            }
-            else
-            {
-                anchoredPos.x = 0;
-                anchoredPos.y = -position;
-            }
-            itemTrans.anchoredPosition = anchoredPos;
-
-            // 设置Item数据
-            if (itemObj.TryGetComponent<IScrollRectItem>(out var scrollItem))
-            {
-                scrollItem.OnActivate();
-                scrollItem.SetData(_DataList[index], index);
-            }
-
-            // 保存Item索引
-            itemTrans.name = $"Item_{index}";
-
-            // 添加到活跃列表
-            _ActiveItems.Add(itemTrans);
-        }
-
-        /// <summary>
-        /// 回收Item
-        /// </summary>
-        private void RecycleItem(RectTransform item)
-        {
-            if (item == null)
-                return;
-
-            GameObject go = item.gameObject;
-
-            // 调用Item的回收方法
-            if (item.TryGetComponent<IScrollRectItem>(out var scrollItem))
-            {
-                scrollItem.OnRecycle();
-            }
-
-            // 从活跃列表移除
-            _ActiveItems.Remove(item);
-
-            // 从映射表中查找对应的对象池对象
-            if (_ItemMap.TryGetValue(go, out ScrollRectItemObject itemObject))
-            {
-                // 禁用GameObject并重置父节点
-                go.SetActive(false);
-                item.SetParent(null);
-
-                // 归还到对象池
-                _ObjectPool.Unspawn(itemObject);
+                Log.Error($"ItemPool_{gameObject.name}_{GetInstanceID()}: 回收对象【{obj.Go_Item.name}】不包含IScrollRectItem组件！");
             }
         }
-
-        /// <summary>
-        /// 回收所有Item
-        /// </summary>
-        private void RecycleAllItems()
-        {
-            while (_ActiveItems.Count > 0)
-            {
-                RecycleItem(_ActiveItems[0]);
-            }
-        }
-
-        /// <summary>
-        /// 获取Item的索引
-        /// </summary>
-        private int GetItemIndex(RectTransform item)
-        {
-            if (item == null)
-                return -1;
-
-            string[] parts = item.name.Split('_');
-            if (parts.Length < 2)
-                return -1;
-
-            int index;
-            if (int.TryParse(parts[1], out index))
-            {
-                return index;
-            }
-
-            return -1;
-        }
-
-        /// <summary>
-        /// 滚动值变化回调
-        /// </summary>
-        private void OnScrollValueChanged(Vector2 value)
-        {
-            UpdateVisibleItems();
-        }
-
-        /// <summary>
-        /// 组件销毁时释放资源
-        /// </summary>
-        protected void OnDestroy()
-        {
-            // 回收所有活跃的Item
-            RecycleAllItems();
-
-            // 清理映射表
-            _ItemMap.Clear();
-
-            // 销毁对象池
-            if (_ObjectPool != null && GameEntry.ObjectPool.HasObjectPool<ScrollRectItemObject>(_PoolName))
-            {
-                GameEntry.ObjectPool.DestroyObjectPool<ScrollRectItemObject>(_PoolName);
-                _ObjectPool = null;
-            }
-        }
-
-        /// <summary>
-        /// 添加单个数据项
-        /// </summary>
-        public void AddItem(object data)
-        {
-            _DataList.Add(data);
-            CalculateContentSize();
-            UpdateVisibleItems();
-        }
-
-        /// <summary>
-        /// 移除指定索引的数据项
-        /// </summary>
-        public void RemoveItem(int index)
-        {
-            if (index < 0 || index >= _DataList.Count)
-                return;
-
-            _DataList.RemoveAt(index);
-            CalculateContentSize();
-            UpdateVisibleItems();
-        }
-
-        /// <summary>
-        /// 更新指定索引的数据项
-        /// </summary>
-        public void UpdateItem(int index, object newData)
-        {
-            if (index < 0 || index >= _DataList.Count)
-                return;
-
-            _DataList[index] = newData;
-
-            // 如果Item已经激活，更新其数据
-            foreach (RectTransform item in _ActiveItems)
-            {
-                if (GetItemIndex(item) == index)
-                {
-                    if (item.TryGetComponent<IScrollRectItem>(out var scrollItem))
-                    {
-                        scrollItem.SetData(newData, index);
-                    }
-                    break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 清空所有数据
-        /// </summary>
-        public void Clear()
-        {
-            _DataList.Clear();
-            RecycleAllItems();
-            CalculateContentSize();
-
-            _FirstVisibleIndex = 0;
-            _LastVisibleIndex = 0;
-        }
-
-        #region 属性
-
-        /// <summary>
-        /// 获取或设置滚动方向
-        /// </summary>
-        public EScrollDir _ScrollDir
-        {
-            get { return _ScrollDirection; }
-            set { _ScrollDirection = value; }
-        }
-
-        /// <summary>
-        /// 获取或设置Item间距
-        /// </summary>
-        public float _ItemSpacing
-        {
-            get { return _Spacing; }
-            set { _Spacing = value; }
-        }
-
-        /// <summary>
-        /// 获取或设置预加载数量
-        /// </summary>
-        public int _LoadCount
-        {
-            get { return _PreloadCount; }
-            set { _PreloadCount = value; }
-        }
-
-        #endregion
     }
 }

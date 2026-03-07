@@ -4,52 +4,27 @@ using UnityEngine;
 
 namespace yxy
 {
-
-
-    // 使用partial类将相关类分离到不同文件
-    public partial class ScrollRectEx
+    public class ScrollRectItemObject : ObjectBase
     {
-        /// <summary>
-        /// ScrollView Item对象池包装类
-        /// </summary>
-        private class ScrollRectItemObject : ObjectBase
+        public GameObject Go_Item { get; private set; }
+
+        public int PrefabIndex { get; private set; }
+        public ScrollRectItemObject()
         {
-            private GameObject Go_Item;
+        }
 
-            public ScrollRectItemObject()
-            {
-            }
+        public static ScrollRectItemObject Create(string name, GameObject go, int prefabIndex)
+        {
+            ScrollRectItemObject obj = ReferencePool.Acquire<ScrollRectItemObject>();
+            obj.Go_Item = go;
+            obj.PrefabIndex = prefabIndex;
+            obj.Initialize(name, go);
+            return obj;
+        }
 
-            public static ScrollRectItemObject Create(string name, GameObject go)
-            {
-                ScrollRectItemObject scrollViewItemObject = ReferencePool.Acquire<ScrollRectItemObject>();
-                scrollViewItemObject.Initialize(name, go);
-                scrollViewItemObject.Go_Item = go;
-                return scrollViewItemObject;
-            }
-
-            public GameObject GameObject
-            {
-                get { return Go_Item; }
-            }
-
-            protected override void Release(bool isShutdown)
-            {
-                if (Go_Item != null)
-                {
-                    if (isShutdown)
-                    {
-                        GameObject.Destroy(Go_Item);
-                    }
-                    Go_Item = null;
-                }
-            }
-
-            public override void Clear()
-            {
-                base.Clear();
-                Go_Item = null;
-            }
+        protected override void Release(bool isShutdown)
+        {
+            Go_Item = null;
         }
     }
 }
