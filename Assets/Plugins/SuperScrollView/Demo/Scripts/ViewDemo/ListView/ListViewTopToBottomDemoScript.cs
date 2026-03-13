@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 namespace SuperScrollView
 {
@@ -26,8 +23,8 @@ namespace SuperScrollView
             mButtonPanel.mLoopListView = mLoopListView;
             mButtonPanel.mDataSourceMgr = mDataSourceMgr;
             mButtonPanel.Start();
-        }       
-       
+        }
+
         LoopListViewItem2 OnGetItemByIndex(LoopListView2 listView, int index)
         {
             if (index < 0 || index >= mDataSourceMgr.TotalItemCount)
@@ -36,7 +33,7 @@ namespace SuperScrollView
             }
             //get the data to showing
             ItemData itemData = mDataSourceMgr.GetItemDataByIndex(index);
-            if(itemData == null)
+            if (itemData == null)
             {
                 return null;
             }
@@ -53,7 +50,7 @@ namespace SuperScrollView
                 itemScript.Init();// here to init the item, such as add button click event listener.
             }
             //update the item’s content for showing, such as image,text.
-            itemScript.SetItemData(itemData,index);
+            itemScript.SetItemData(itemData, index);
             return item;
         }
     }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace SuperScrollView
@@ -41,16 +40,16 @@ namespace SuperScrollView
             if (mTmpPooledItemList.Count > 0)
             {
                 int count = mTmpPooledItemList.Count;
-                for(int i = 0;i < count;++i)
+                for (int i = 0; i < count; ++i)
                 {
-                    if(mTmpPooledItemList[i].ItemIndex == itemIndexForSearch)
+                    if (mTmpPooledItemList[i].ItemIndex == itemIndexForSearch)
                     {
                         tItem = mTmpPooledItemList[i];
                         mTmpPooledItemList.RemoveAt(i);
                         break;
                     }
                 }
-                if(tItem == null)
+                if (tItem == null)
                 {
                     tItem = mTmpPooledItemList[count - 1];
                     mTmpPooledItemList.RemoveAt(count - 1);
