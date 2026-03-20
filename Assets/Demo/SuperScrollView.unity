@@ -448,7 +448,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 450, y: 800}
+  m_SizeDelta: {x: 450, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &581959238
 MonoBehaviour:
@@ -472,15 +472,15 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _ItemPrefabDataList:
-  - _ItemPrefab: {fileID: 0}
-    _Padding: 0
+  - _ItemPrefab: {fileID: 2610588383522870830, guid: d70ae4a7778f74f7ea7bade1d26c0d61, type: 3}
+    _Padding: 10
     _Offset: 0
     _PreCreateCount: 0
-  _CreateItemLineFirst: 300
-  _CreateItemLineLast: 300
-  _RecycleItemLineFirst: 300
-  _RecycleItemLineLast: 300
-  _IsVertical: 1
+  _CreateItemLineFirst: 0
+  _CreateItemLineLast: 0
+  _RecycleItemLineFirst: 0
+  _RecycleItemLineLast: 0
+  _isVertical: 1
 --- !u!114 &581959239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -494,7 +494,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 1636251670}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -1105,7 +1105,7 @@ RectTransform:
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 300}
-  m_Pivot: {x: 0, y: 1}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &1730929419
 GameObject:
   m_ObjectHideFlags: 0
@@ -1364,7 +1364,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1aa7aa7bf86cd43238c9d4639b729e50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _loopListView: {fileID: 1418982476}
+  _loopListView: {fileID: 581959238}
 --- !u!4 &1892521483
 Transform:
   m_ObjectHideFlags: 0
@@ -1417,8 +1417,8 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -17, y: 0}
-  m_Pivot: {x: 0, y: 1}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1945811297
 MonoBehaviour:
   m_ObjectHideFlags: 0

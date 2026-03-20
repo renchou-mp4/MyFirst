@@ -24,6 +24,13 @@ namespace yxy
             set => _parentListView = value;
         }
 
+        private int _createFrame = 0;
+        public int _CreateFrame
+        {
+            get => _createFrame;
+            set => _createFrame = value;
+        }
+
         private string _itemPrefabName;
         public string _ItemPrefabName
         {
@@ -32,23 +39,35 @@ namespace yxy
         }
 
         private int _itemIndex;
-        public int _ItemIndex => _itemIndex;
+        public int _ItemIndex
+        {
+            get => _itemIndex;
+            set => _itemIndex = value;
+        }
 
 
         private float _itemPosOffset;
         /// <summary>
         /// 另一个方向的偏移量，垂直列表就是水平偏移，水平列表就是垂直偏移
         /// </summary>l
-        public float _ItemPosOffset => _itemPosOffset;
+        public float _ItemPosOffset
+        {
+            get => _itemPosOffset;
+            set => _itemPosOffset = value;
+        }
 
         private float _itemPadding;
-        public float _ItemPadding => _itemPadding;
+        public float _ItemPadding
+        {
+            get => _itemPadding;
+            set => _itemPadding = value;
+        }
 
         public float _ItemSize
         {
             get
             {
-                return _ParentListView._IsVertical ? _CacheRectTransform.rect.height : _CacheRectTransform.rect.width;
+                return _ParentListView._isVertical ? _CacheRectTransform.rect.height : _CacheRectTransform.rect.width;
             }
         }
 

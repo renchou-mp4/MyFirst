@@ -4,72 +4,130 @@ using UnityGameFramework.Runtime;
 
 namespace yxy
 {
-    public class ScrollRectItemPool : MonoBehaviour
+    public class ScrollRectItemPool
     {
 
         private GameObject _itemPrefab;
         private Transform _itemParent;
         private string _prefabName;
-        private int _preCreateCount = 1;
-        private List<LoopListViewItem> _itemPool = new();
-        private List<LoopListViewItem> _cacheItemPool = new();
+        private float _prefabPosOffset;
+        private float _prefabPosPadding;
+        private int _preCreateCount;
 
-        public ScrollRectItemPool(GameObject prefab, Transform itemParent, int preCreateCount)
+        /// <summary>
+        /// 未激活未使用Item池
+        /// </summary>
+        private List<LoopListViewItem> _itemPool = new();
+        /// <summary>
+        /// 已激活未使用Item池，临时存放
+        /// </summary>
+        private List<LoopListViewItem> _tmpItemPool = new();
+
+        public ScrollRectItemPool(GameObject prefab, Transform itemParent, float prefabPosOffset = 0, float prefabPosPadding = 0, int preCreateCount = 0)
         {
             _itemPrefab = prefab;
-            _prefabName = prefab.name;
-            _preCreateCount = preCreateCount;
             _itemParent = itemParent;
+            _prefabName = prefab.name;
+            _prefabPosOffset = prefabPosOffset;
+            _prefabPosPadding = prefabPosPadding;
+            _preCreateCount = preCreateCount;
+
             for (int i = 0; i < _preCreateCount; i++)
             {
-                LoopListViewItem item = Instantiate(_itemPrefab, _itemParent).GetComponent<LoopListViewItem>();
+                LoopListViewItem item = GameObject.Instantiate(_itemPrefab, _itemParent).GetComponent<LoopListViewItem>();
+                item.gameObject.SetSelfActive(false);
                 _itemPool.Add(item);
-                item.gameObject.SetSelfActive(true);
-                item._ItemPrefabName = _prefabName;
-
-                RectTransform rtf = item.GetComponent<RectTransform>();
-                rtf.localScale = Vector3.one;
-                rtf.anchoredPosition3D = Vector3.zero;
-                rtf.localEulerAngles = Vector3.zero;
             }
+
         }
 
         public LoopListViewItem GetItem()
         {
-            LoopListViewItem item = null;
-            item._CacheRectTransform.anchoredPosition3D = default;
-            item._CacheRectTransform.localEulerAngles = default;
-            item._CacheRectTransform.localScale = default;
-            item._CacheRectTransform.SetParent(_itemParent, false);
-            item.gameObject.SetSelfActive(false);
+            LoopListViewItem item;
 
-            //没有缓存Item
-            if (_cacheItemPool.Count <= 0)
+            //有已激活的Item
+            if (_tmpItemPool.Count > 0)
             {
-                item = Instantiate(_itemPrefab, _itemParent).GetComponent<LoopListViewItem>();
+                item = _tmpItemPool[^1];
+                _tmpItemPool.RemoveAt(_tmpItemPool.Count - 1);
+                //TODO debug使用，需要删除
+                item.gameObject.SetSelfActive(true);
+
+                item._CacheRectTransform.localScale = Vector3.one;
+                item._CacheRectTransform.anchoredPosition3D = Vector3.zero;
+                item._CacheRectTransform.localEulerAngles = Vector3.zero;
+                return item;
             }
-            //有缓存Item
-            else
+
+            //有未激活的Item
+            if (_itemPool.Count > 0)
             {
-                item = _cacheItemPool[0];
-                _cacheItemPool.RemoveAt(0);
+                item = _itemPool[^1];
+                _itemPool.RemoveAt(_itemPool.Count - 1);
+                item.gameObject.SetSelfActive(true);
+
+                item._CacheRectTransform.localScale = Vector3.one;
+                item._CacheRectTransform.anchoredPosition3D = Vector3.zero;
+                item._CacheRectTransform.localEulerAngles = Vector3.zero;
+                return item;
             }
-            _itemPool.Add(item);
+            item = CreateItem();
+
+            return item;
+        }
+
+        public LoopListViewItem CreateItem()
+        {
+            LoopListViewItem item = GameObject.Instantiate(_itemPrefab, _itemParent).GetComponent<LoopListViewItem>();
             item.gameObject.SetSelfActive(true);
+            item._CacheRectTransform.localScale = Vector3.one;
+            item._CacheRectTransform.anchoredPosition3D = Vector3.zero;
+            item._CacheRectTransform.localEulerAngles = Vector3.zero;
+            item._ItemPrefabName = _prefabName;
+            item._ItemPosOffset = _prefabPosOffset;
+            item._ItemPadding = _prefabPosPadding;
             return item;
         }
 
         public void Recycle(LoopListViewItem item)
         {
-            if (item == null) return;
-            if (!_itemPool.Contains(item))
+            if (item._ItemPrefabName != _prefabName)
             {
-                Log.Error("要回收的Item不属于这个池子");
+                Debug.LogError("要回收的Item不属于这个池子");
                 return;
             }
-            _itemPool.Remove(item);
-            _cacheItemPool.Add(item);
+            _itemPool.Add(item);
             item.gameObject.SetSelfActive(false);
+        }
+
+        public void TmpRecycle(LoopListViewItem item)
+        {
+            if (item._ItemPrefabName != _prefabName)
+            {
+                Debug.LogError("要回收的Item不属于这个池子");
+                return;
+            }
+            _tmpItemPool.Add(item);
+            //TODO debug使用，需要删除
+            item.gameObject.SetSelfActive(false);
+        }
+
+        public void ClearTmpRecycle()
+        {
+            for (int i = 0; i < _tmpItemPool.Count; i++)
+            {
+                Recycle(_tmpItemPool[i]);
+            }
+        }
+
+        public void DestroyAllItem()
+        {
+            ClearTmpRecycle();
+            for (int i = 0; i < _itemPool.Count; i++)
+            {
+                GameObject.DestroyImmediate(_itemPool[i].gameObject);
+            }
+            _itemPool.Clear();
         }
     }
 }
