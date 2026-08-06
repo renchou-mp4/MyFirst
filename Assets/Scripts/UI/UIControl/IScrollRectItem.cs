@@ -2,9 +2,8 @@ using UnityEngine;
 
 namespace yxy
 {
-    public interface IScrollRectItem1
+    public interface IScrollRectItem
     {
-
         public void SetData(object data, int index);
     }
 }

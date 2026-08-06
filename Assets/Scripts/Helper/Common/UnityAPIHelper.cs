@@ -4,7 +4,6 @@ namespace yxy
 {
     public static class UnityAPIHelper
     {
-
         /// <summary>
         /// 自定义SetActive
         /// </summary>
@@ -12,7 +11,8 @@ namespace yxy
         ///如果跳过null检查直接调用 go.SetActive() → 抛出 MissingReferenceException，因为 go 已被销毁，但在 C# 层 go仍然存在
         public static void SetSelfActive(this GameObject go, bool active)
         {
-            if (!go || go.activeSelf == active) return;
+            if (!go || go.activeSelf == active)
+                return;
             go.SetActive(active);
         }
     }

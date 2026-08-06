@@ -3,7 +3,7 @@ using UnityGameFramework.Runtime;
 
 namespace yxy
 {
-    public class Prefab_Image : UIFormLogic, IScrollRectItem1
+    public class Prefab_Image : UIFormLogic, IScrollRectItem
     {
         public int GetPrefabIndex()
         {
@@ -22,4 +22,3 @@ namespace yxy
         }
     }
 }
-

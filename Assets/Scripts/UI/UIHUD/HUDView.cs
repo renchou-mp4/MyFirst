@@ -6,11 +6,13 @@ namespace yxy
 {
     public class HUDView : UIFormLogic
     {
+        /// 设置界面按鈕
         [SerializeField]
         private ButtonCustom Btn_Setting;
-        [SerializeField]
-        private ScrollRectEx Sr_ItemView;
 
+        /// 列表满动视图
+        [SerializeField]
+        private ScrollRectEx _itemView;
 
         protected override void OnInit(object userData)
         {
@@ -23,8 +25,7 @@ namespace yxy
                 dataList.Add(new ScrollRectExData() { Data = $"item{i + 1}", PrefabIndex = 0 });
             }
 
-            Sr_ItemView.SetData(dataList);
-
+            _itemView.SetData(dataList);
         }
 
         private void OnClickSetting()

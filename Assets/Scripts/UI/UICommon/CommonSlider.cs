@@ -6,13 +6,26 @@ namespace yxy
 {
     public struct CommonSliderData
     {
-        public readonly UnityAction _btnLeftAction;
-        public readonly UnityAction _btnRightAction;
-        public readonly int _maxValue;
-        public readonly int _minValue;
-        public readonly int _defaultValue;
-        public readonly bool _interactableSlider;
-        public readonly bool _interactableInput;
+        /// 左按鈕点击回调
+        public readonly UnityAction BtnLeftAction;
+
+        /// 右按鈕点击回调
+        public readonly UnityAction BtnRightAction;
+
+        /// 最大値
+        public readonly int MaxValue;
+
+        /// 最小値
+        public readonly int MinValue;
+
+        /// 默认値
+        public readonly int DefaultValue;
+
+        /// Slider 是否可交互
+        public readonly bool InteractableSlider;
+
+        /// 输入框是否可交互
+        public readonly bool InteractableInput;
 
         public CommonSliderData(
             UnityAction btnLeftAction,
@@ -21,72 +34,93 @@ namespace yxy
             int minValue,
             int defaultValue = 0,
             bool interactableSlider = true,
-            bool interactableInput = true)
+            bool interactableInput = true
+        )
         {
-            _btnLeftAction = btnLeftAction;
-            _btnRightAction = btnRightAction;
-            _maxValue = maxValue;
-            _minValue = minValue;
-            _defaultValue = defaultValue;
-            _interactableSlider = interactableSlider;
-            _interactableInput = interactableInput;
+            BtnLeftAction = btnLeftAction;
+            BtnRightAction = btnRightAction;
+            MaxValue = maxValue;
+            MinValue = minValue;
+            DefaultValue = defaultValue;
+            InteractableSlider = interactableSlider;
+            InteractableInput = interactableInput;
         }
     }
 
     public class CommonSlider : MonoBehaviour
     {
+        // ── 序列化字段 (Serialized Fields) ───────────────────────
+
+        /// 左按鈕
+        [SerializeField]
+        private ButtonCustom Btn_Left;
+
+        /// 右按鈕
+        [SerializeField]
+        private ButtonCustom Btn_Right;
+
+        /// 滑动条
+        [SerializeField]
+        private SliderCustom Sld_Slider;
+
+        /// 数量输入框
+        [SerializeField]
+        private TMP_InputField _inputCount;
+
+        // ── 私有字段 (Private Fields) ───────────────────────────
+
+        /// 当前数据
         private CommonSliderData _data;
 
-        public ButtonCustom _Btn_Left;
-        public ButtonCustom _Btn_Right;
-        public SliderCustom _Slider;
-        public TMP_InputField _Input_Count;
-
-
+        /// <summary>
+        /// 初始化滑动条组件
+        /// </summary>
         public void Init(CommonSliderData data)
         {
             _data = data;
-            _Input_Count.interactable = _data._interactableInput;
-            _Slider.interactable = _data._interactableSlider;
-            _Slider.wholeNumbers = true;
-            _Slider.maxValue = _data._maxValue;
-            _Slider.minValue = _data._minValue;
+            _inputCount.interactable = _data.InteractableInput;
+            Sld_Slider.interactable = _data.InteractableSlider;
+            Sld_Slider.wholeNumbers = true;
+            Sld_Slider.maxValue = _data.MaxValue;
+            Sld_Slider.minValue = _data.MinValue;
 
-            _Btn_Left?.onClick.AddListener(OnClickBtnLeft);
-            _Btn_Right?.onClick.AddListener(OnClickBtnRight);
-            if (_data._btnLeftAction != null || _data._btnRightAction != null)
+            Btn_Left?.onClick.AddListener(OnClickBtnLeft);
+            Btn_Right?.onClick.AddListener(OnClickBtnRight);
+            if (_data.BtnLeftAction != null || _data.BtnRightAction != null)
             {
-                _Btn_Left?.onClick.AddListener(_data._btnLeftAction);
-                _Btn_Right?.onClick.AddListener(_data._btnRightAction);
+                Btn_Left?.onClick.AddListener(_data.BtnLeftAction);
+                Btn_Right?.onClick.AddListener(_data.BtnRightAction);
             }
 
-            _Slider.onValueChanged.AddListener(OnValueChanged);
-            _Slider.value = _data._defaultValue;
+            Sld_Slider.onValueChanged.AddListener(OnValueChanged);
+            Sld_Slider.value = _data.DefaultValue;
 
             ChangeInputText();
         }
 
         private void OnClickBtnLeft()
         {
-            _Slider.value = _Slider.value - 1 < _data._minValue ? _data._minValue : _Slider.value - 1;
+            Sld_Slider.value =
+                Sld_Slider.value - 1 < _data.MinValue ? _data.MinValue : Sld_Slider.value - 1;
             ChangeInputText();
         }
 
         private void OnClickBtnRight()
         {
-            _Slider.value = _Slider.value + 1 > _data._maxValue ? _data._maxValue : _Slider.value + 1;
+            Sld_Slider.value =
+                Sld_Slider.value + 1 > _data.MaxValue ? _data.MaxValue : Sld_Slider.value + 1;
             ChangeInputText();
         }
 
         private void OnValueChanged(float changeValue)
         {
-            _Slider.value = changeValue;
+            Sld_Slider.value = changeValue;
             ChangeInputText();
         }
 
         private void ChangeInputText()
         {
-            _Input_Count.text = $"{_Slider.value}/{_data._maxValue}";
+            _inputCount.text = $"{Sld_Slider.value}/{_data.MaxValue}";
         }
     }
 }

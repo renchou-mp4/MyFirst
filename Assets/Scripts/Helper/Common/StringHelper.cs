@@ -9,7 +9,8 @@ namespace yxy
 
         public static string GetDirectoryPath(this string assetPath)
         {
-            if (assetPath.IsNullOrEmpty()) return assetPath;
+            if (assetPath.IsNullOrEmpty())
+                return assetPath;
 
             assetPath = assetPath.Replace("\\", "/");
             int lastIndex = assetPath.LastIndexOf('/');
@@ -17,4 +18,3 @@ namespace yxy
         }
     }
 }
-

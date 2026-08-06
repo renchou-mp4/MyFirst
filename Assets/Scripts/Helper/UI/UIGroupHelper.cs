@@ -31,7 +31,5 @@ namespace yxy
             rectTransform.sizeDelta = Vector2.zero;
             rectTransform.anchoredPosition = Vector2.zero;
         }
-
     }
 }
-
